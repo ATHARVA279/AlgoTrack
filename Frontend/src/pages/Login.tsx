@@ -17,7 +17,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
 
     try {
       const res = await axios.post(
-        '/api/auth/login',
+       'https://algotrack-vujc.onrender.com/api/auth/login',
         { email, password },
         { withCredentials: true }
       );
