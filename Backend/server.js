@@ -11,9 +11,13 @@ const app = express();
 connectDB();
 
 const allowedOrigins = [
-  'http://localhost:5174',
+  'http://localhost:5173',
   'https://your-frontend-domain.com',
   "https://algotrack-vujc.onrender.com/api/auth/login",
+  "https://algo-track-tau.vercel.app/login",
+  'https://algo-track-tau.vercel.app',
+  "*",
+  "**"
 ];
 
 app.use(
