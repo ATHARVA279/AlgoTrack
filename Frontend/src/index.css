@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cyber-black text-gray-100;
+  }
+}
+
+@layer components {
+  .cyber-button {
+    @apply px-6 py-3 bg-cyber-gradient text-white font-bold rounded-lg 
+           shadow-neon transition-all duration-300 hover:shadow-neon-hover
+           hover:scale-105 active:scale-95;
+  }
+
+  .cyber-card {
+    @apply bg-cyber-darker border border-neon-purple/20 rounded-lg p-6
+           shadow-lg backdrop-blur-sm;
+  }
+
+  .cyber-input {
+    @apply bg-cyber-dark border border-neon-purple/30 rounded-lg px-4 py-2
+           text-gray-100 focus:outline-none focus:border-neon-purple
+           focus:ring-2 focus:ring-neon-purple/20;
+  }
+
+  .neon-text {
+    @apply font-bold bg-clip-text text-transparent bg-neon-gradient;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-cyber-black;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-neon-purple/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neon-purple/50;
+}
