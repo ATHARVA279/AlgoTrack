@@ -11,7 +11,10 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://algotrack-client.vercel.app',
+  'https://algotrack-client.vercel.app/api/auth/signup',
+  'https://algotrack-vujc.onrender.com/api/auth/login',
+  '*',
+  '**'
 ];
 
 app.use(
@@ -29,7 +32,6 @@ app.use(
 
 app.use(express.json());
 
-// ✅ Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/questions', require('./routes/questionsRoutes'));
 
