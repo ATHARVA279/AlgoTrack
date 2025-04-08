@@ -11,9 +11,9 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://algotrack-client.vercel.app/api/auth/signup',
-  'https://algotrack-vujc.onrender.com/api/auth/login',
-  'https://algotrack-client.vercel.app'
+  'https://algo-track-tau.vercel.app/api/auth/signup',
+  'https://algo-track-tau.vercel.app/api/auth/login',
+  'https://algo-track-tau.vercel.app'
 ];
 
 app.use(
