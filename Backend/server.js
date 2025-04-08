@@ -13,8 +13,7 @@ const allowedOrigins = [
   'http://localhost:5174',
   'https://algotrack-client.vercel.app/api/auth/signup',
   'https://algotrack-vujc.onrender.com/api/auth/login',
-  '*',
-  '**'
+  'https://algotrack-client.vercel.app'
 ];
 
 app.use(

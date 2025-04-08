@@ -3,26 +3,43 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const signupUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  console.log('📩 Received signup request:', req.body);
+
+  const { username, email, password } = req.body;
+
   try {
     let existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ msg: 'User already exists' });
+    if (existingUser) {
+      console.log('⚠️ User already exists with email:', email);
+      return res.status(400).json({ msg: 'User already exists' });
+    }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(password, salt);
+    const newUser = new User({ username, email, password });
+    console.log('📦 New user object created:', newUser);
 
-    const newUser = new User({ name, email, password: hashed });
     await newUser.save();
+    console.log('✅ New user saved to DB');
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
+    console.log('🔐 JWT token created:', token);
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'None', // Make sure frontend uses https on deployment
+    });
 
     res.status(201).json({ user: { id: newUser._id, email }, token });
+    console.log('🚀 Signup successful, response sent');
   } catch (err) {
-    res.status(500).json({ msg: 'Server error' });
+    console.error('❌ Error during signup:', err);
+    res.status(500).json({ msg: 'Server error during signup' });
   }
 };
+
+
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
