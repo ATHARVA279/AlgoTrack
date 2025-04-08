@@ -27,9 +27,20 @@ function LandingPage() {
           with our comprehensive tracking system.
         </p>
 
-        <button onClick={() => navigate("/login")} className="cyber-button">
-          Start Tracking
-        </button>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={() => navigate("/login")}
+            className="cyber-button px-6 py-2"
+          >
+            Login
+          </button>
+          <button
+            onClick={() => navigate("/signup")}
+            className="cyber-button px-6 py-2"
+          >
+            Sign Up
+          </button>
+        </div>
       </motion.div>
 
       <motion.div

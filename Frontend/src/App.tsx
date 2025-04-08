@@ -10,6 +10,7 @@ import QuestionDetail from "./pages/QuestionDetail";
 import AddQuestion from "./pages/AddQuestion";
 import Profile from "./pages/Profile";
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,6 +44,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+            <Route path="/signup" element={<Signup setIsAuthenticated={setIsAuthenticated} />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/question/:id" element={<QuestionDetail />} />
             <Route path="/add-question" element={<AddQuestion />} />
