@@ -8,7 +8,6 @@ const UserSchema = new mongoose.Schema({
   solvedQuestions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question' }]
 });
 
-// Hash password before saving
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);

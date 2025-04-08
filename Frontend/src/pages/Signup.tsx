@@ -19,7 +19,7 @@ const Signup: React.FC<SignupProps> = ({ setIsAuthenticated }) => {
     try {
       const res = await axios.post(
         'https://algotrack-vujc.onrender.com/api/auth/signup',
-        { name, email, password },
+        { username: name, email, password },
         { withCredentials: true }
       );
 
