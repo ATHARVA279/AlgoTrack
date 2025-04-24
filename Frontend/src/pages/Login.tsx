@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from '../utils/axiosInstance';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "../utils/axiosInstance";
+import toast from "react-hot-toast";
 
 interface LoginProps {
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
@@ -9,36 +9,38 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const res = await axios.post(
-       'https://algotrack-vujc.onrender.com/api/auth/login',
+        "https://algotrack-vujc.onrender.com/api/auth/login",
         { email, password },
         { withCredentials: true }
       );
 
       if (res.data.success) {
-        toast.success('Logged in successfully!');
+        toast.success("Logged in successfully!");
         setIsAuthenticated(true); // ✅ update auth state
-        navigate('/dashboard');
+        navigate("/dashboard");
       } else {
-        toast.error(res.data.message || 'Login failed!');
+        toast.error(res.data.message || "Login failed!");
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Something went wrong!');
+      toast.error(err.response?.data?.message || "Something went wrong!");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cyber-black px-4">
       <div className="bg-gray-900 p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">Login to Continue</h2>
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+          Login to Continue
+        </h2>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm text-gray-300 mb-1">Email</label>

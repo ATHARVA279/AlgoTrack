@@ -1,35 +1,28 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import { 
-  Clock, 
-  BookOpen, 
-  Code2, 
-  MessageCircle,
-  ArrowLeft
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import React from "react";
+import { useParams } from "react-router-dom";
+import { Clock, BookOpen, Code2, MessageCircle, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-// Mock data for demonstration
 const mockQuestion = {
-  id: '1',
-  title: 'Two Sum',
+  id: "1",
+  title: "Two Sum",
   description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
 
 You may assume that each input would have exactly one solution, and you may not use the same element twice.
 
 You can return the answer in any order.`,
-  difficulty: 'Easy',
-  topic: 'Arrays',
+  difficulty: "Easy",
+  topic: "Arrays",
   sampleInput: `nums = [2,7,11,15], target = 9`,
   sampleOutput: `[0,1]`,
   solutions: [
     {
-      id: '1',
-      language: 'javascript',
+      id: "1",
+      language: "javascript",
       code: `function twoSum(nums, target) {
   const map = new Map();
   
@@ -54,36 +47,36 @@ You can return the answer in any order.`,
       
 Time Complexity: O(n)
 Space Complexity: O(n)`,
-      createdAt: '2024-03-15T10:00:00Z'
-    }
+      createdAt: "2024-03-15T10:00:00Z",
+    },
   ],
-  status: 'Solved',
-  createdAt: '2024-03-15T10:00:00Z',
-  updatedAt: '2024-03-15T10:00:00Z'
+  status: "Solved",
+  createdAt: "2024-03-15T10:00:00Z",
+  updatedAt: "2024-03-15T10:00:00Z",
 };
 
 const difficultyColors = {
-  Easy: 'text-green-400',
-  Medium: 'text-yellow-400',
-  Hard: 'text-red-400',
+  Easy: "text-green-400",
+  Medium: "text-yellow-400",
+  Hard: "text-red-400",
 };
 
 function QuestionDetail() {
   const { id } = useParams();
-  const question = mockQuestion; // In real app, fetch based on id
+  const question = mockQuestion;
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Link 
-          to="/dashboard" 
+        <Link
+          to="/dashboard"
           className="flex items-center space-x-2 text-gray-400 hover:text-neon-purple transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Back to Dashboard</span>
         </Link>
-        
+
         <div className="flex items-center space-x-4">
           <span className="px-3 py-1 rounded-full bg-neon-purple/10 text-neon-purple text-sm">
             {question.topic}
@@ -101,7 +94,7 @@ function QuestionDetail() {
         className="cyber-card"
       >
         <h1 className="text-3xl font-bold mb-6">{question.title}</h1>
-        
+
         <div className="prose prose-invert max-w-none">
           <ReactMarkdown>{question.description}</ReactMarkdown>
         </div>
@@ -123,7 +116,6 @@ function QuestionDetail() {
         </div>
       </motion.div>
 
-      {/* Solutions */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -156,10 +148,10 @@ function QuestionDetail() {
                 language={solution.language}
                 style={atomDark}
                 customStyle={{
-                  background: 'transparent',
-                  padding: '1.5rem',
+                  background: "transparent",
+                  padding: "1.5rem",
                   margin: 0,
-                  borderRadius: '0.5rem',
+                  borderRadius: "0.5rem",
                 }}
               >
                 {solution.code}

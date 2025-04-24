@@ -1,19 +1,25 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Code2, LayoutDashboard, UserCircle, Settings } from 'lucide-react';
-import axios from 'axios';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Code2, LayoutDashboard, UserCircle, Settings } from "lucide-react";
+import axios from "axios";
 
-export function Navbar({ isAuthenticated, setIsAuthenticated }: { isAuthenticated: boolean, setIsAuthenticated: (val: boolean) => void }) {
+export function Navbar({
+  isAuthenticated,
+  setIsAuthenticated,
+}: {
+  isAuthenticated: boolean;
+  setIsAuthenticated: (val: boolean) => void;
+}) {
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = async () => {
     try {
-      await axios.post('/api/auth/logout', {}, { withCredentials: true });
+      await axios.post("/api/auth/logout", {}, { withCredentials: true });
       setIsAuthenticated(false);
     } catch (err) {
-      console.error('Logout failed', err);
+      console.error("Logout failed", err);
     }
   };
 
@@ -32,9 +38,11 @@ export function Navbar({ isAuthenticated, setIsAuthenticated }: { isAuthenticate
                 <Link
                   to="/dashboard"
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors
-                    ${isActive('/dashboard') 
-                      ? 'bg-neon-purple/20 text-neon-purple' 
-                      : 'text-gray-400 hover:text-neon-purple hover:bg-neon-purple/10'}`}
+                    ${
+                      isActive("/dashboard")
+                        ? "bg-neon-purple/20 text-neon-purple"
+                        : "text-gray-400 hover:text-neon-purple hover:bg-neon-purple/10"
+                    }`}
                 >
                   <LayoutDashboard className="w-5 h-5" />
                   <span>Dashboard</span>
@@ -43,9 +51,11 @@ export function Navbar({ isAuthenticated, setIsAuthenticated }: { isAuthenticate
                 <Link
                   to="/profile"
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors
-                    ${isActive('/profile') 
-                      ? 'bg-neon-purple/20 text-neon-purple' 
-                      : 'text-gray-400 hover:text-neon-purple hover:bg-neon-purple/10'}`}
+                    ${
+                      isActive("/profile")
+                        ? "bg-neon-purple/20 text-neon-purple"
+                        : "text-gray-400 hover:text-neon-purple hover:bg-neon-purple/10"
+                    }`}
                 >
                   <UserCircle className="w-5 h-5" />
                   <span>Profile</span>
@@ -62,8 +72,18 @@ export function Navbar({ isAuthenticated, setIsAuthenticated }: { isAuthenticate
               </>
             ) : (
               <>
-                <Link to="/login" className="text-gray-400 hover:text-neon-purple transition">Login</Link>
-                <Link to="/register" className="text-gray-400 hover:text-neon-purple transition">Register</Link>
+                <Link
+                  to="/login"
+                  className="text-gray-400 hover:text-neon-purple transition"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="text-gray-400 hover:text-neon-purple transition"
+                >
+                  Register
+                </Link>
               </>
             )}
           </div>

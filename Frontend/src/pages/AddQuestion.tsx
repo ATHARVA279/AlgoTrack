@@ -1,59 +1,72 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Editor from '@monaco-editor/react';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import Editor from "@monaco-editor/react";
+import toast from "react-hot-toast";
 
-const difficultyLevels = ['Easy', 'Medium', 'Hard'];
-const topics = ['Arrays', 'Strings', 'Linked Lists', 'Trees', 'Graphs', 'Dynamic Programming', 'Sorting', 'Searching'];
+const difficultyLevels = ["Easy", "Medium", "Hard"];
+const topics = [
+  "Arrays",
+  "Strings",
+  "Linked Lists",
+  "Trees",
+  "Graphs",
+  "Dynamic Programming",
+  "Sorting",
+  "Searching",
+];
 
 function AddQuestion() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    difficulty: 'Easy',
-    topic: '',
-    sampleInput: '',
-    sampleOutput: '',
+    title: "",
+    description: "",
+    difficulty: "Easy",
+    topic: "",
+    sampleInput: "",
+    sampleOutput: "",
     solution: {
-      language: 'javascript',
-      code: '',
-      explanation: ''
-    }
+      language: "javascript",
+      code: "",
+      explanation: "",
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!formData.title || !formData.description || !formData.topic) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
     // TODO: Submit to backend
-    toast.success('Question added successfully!');
-    navigate('/dashboard');
+    toast.success("Question added successfully!");
+    navigate("/dashboard");
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleCodeChange = (value: string | undefined) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       solution: {
         ...prev.solution,
-        code: value || ''
-      }
+        code: value || "",
+      },
     }));
   };
 
@@ -61,8 +74,8 @@ function AddQuestion() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Link 
-          to="/dashboard" 
+        <Link
+          to="/dashboard"
           className="flex items-center space-x-2 text-gray-400 hover:text-neon-purple transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -77,12 +90,15 @@ function AddQuestion() {
         className="cyber-card"
       >
         <h1 className="text-3xl font-bold mb-8">Add New Question</h1>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-400 mb-2">
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-gray-400 mb-2"
+              >
                 Question Title *
               </label>
               <input
@@ -99,7 +115,10 @@ function AddQuestion() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="difficulty" className="block text-sm font-medium text-gray-400 mb-2">
+                <label
+                  htmlFor="difficulty"
+                  className="block text-sm font-medium text-gray-400 mb-2"
+                >
                   Difficulty *
                 </label>
                 <select
@@ -110,14 +129,19 @@ function AddQuestion() {
                   className="cyber-input w-full"
                   required
                 >
-                  {difficultyLevels.map(level => (
-                    <option key={level} value={level}>{level}</option>
+                  {difficultyLevels.map((level) => (
+                    <option key={level} value={level}>
+                      {level}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label htmlFor="topic" className="block text-sm font-medium text-gray-400 mb-2">
+                <label
+                  htmlFor="topic"
+                  className="block text-sm font-medium text-gray-400 mb-2"
+                >
                   Topic *
                 </label>
                 <select
@@ -129,8 +153,10 @@ function AddQuestion() {
                   required
                 >
                   <option value="">Select Topic</option>
-                  {topics.map(topic => (
-                    <option key={topic} value={topic}>{topic}</option>
+                  {topics.map((topic) => (
+                    <option key={topic} value={topic}>
+                      {topic}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -139,7 +165,10 @@ function AddQuestion() {
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-400 mb-2">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-400 mb-2"
+            >
               Problem Description *
             </label>
             <textarea
@@ -157,7 +186,10 @@ function AddQuestion() {
           {/* Sample Input/Output */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="sampleInput" className="block text-sm font-medium text-gray-400 mb-2">
+              <label
+                htmlFor="sampleInput"
+                className="block text-sm font-medium text-gray-400 mb-2"
+              >
                 Sample Input *
               </label>
               <textarea
@@ -173,7 +205,10 @@ function AddQuestion() {
             </div>
 
             <div>
-              <label htmlFor="sampleOutput" className="block text-sm font-medium text-gray-400 mb-2">
+              <label
+                htmlFor="sampleOutput"
+                className="block text-sm font-medium text-gray-400 mb-2"
+              >
                 Sample Output *
               </label>
               <textarea
@@ -192,9 +227,12 @@ function AddQuestion() {
           {/* Solution */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Initial Solution</h3>
-            
+
             <div>
-              <label htmlFor="language" className="block text-sm font-medium text-gray-400 mb-2">
+              <label
+                htmlFor="language"
+                className="block text-sm font-medium text-gray-400 mb-2"
+              >
                 Programming Language
               </label>
               <select
@@ -231,7 +269,10 @@ function AddQuestion() {
             </div>
 
             <div>
-              <label htmlFor="explanation" className="block text-sm font-medium text-gray-400 mb-2">
+              <label
+                htmlFor="explanation"
+                className="block text-sm font-medium text-gray-400 mb-2"
+              >
                 Solution Explanation
               </label>
               <textarea

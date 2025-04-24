@@ -2,12 +2,12 @@ export interface Question {
   id: string;
   title: string;
   description: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
+  difficulty: "Easy" | "Medium" | "Hard";
   topic: string;
   sampleInput: string;
   sampleOutput: string;
   solutions: Solution[];
-  status: 'Not Started' | 'In Progress' | 'Solved';
+  status: "Not Started" | "In Progress" | "Solved";
   createdAt: string;
   updatedAt: string;
 }

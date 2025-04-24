@@ -28,7 +28,7 @@ const signupUser = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
-      sameSite: "None", // Make sure frontend uses https on deployment
+      sameSite: "None",
     });
 
     res.status(201).json({ user: { id: newUser._id, email }, token });

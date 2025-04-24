@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from '../utils/axiosInstance';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "../utils/axiosInstance";
+import toast from "react-hot-toast";
 
 interface SignupProps {
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
@@ -9,37 +9,39 @@ interface SignupProps {
 
 const Signup: React.FC<SignupProps> = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const res = await axios.post(
-        'https://algotrack-vujc.onrender.com/api/auth/signup',
+        "https://algotrack-vujc.onrender.com/api/auth/signup",
         { username: name, email, password },
         { withCredentials: true }
       );
 
       if (res.data.token) {
-        toast.success('Account created successfully!');
+        toast.success("Account created successfully!");
         setIsAuthenticated(true);
-        navigate('/dashboard');
+        navigate("/dashboard");
       } else {
-        toast.error(res.data.message || 'Signup failed!');
+        toast.error(res.data.message || "Signup failed!");
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.response?.data?.msg || 'Something went wrong!');
+      toast.error(err.response?.data?.msg || "Something went wrong!");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cyber-black px-4">
       <div className="bg-gray-900 p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">Create your Account</h2>
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+          Create your Account
+        </h2>
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
             <label className="block text-sm text-gray-300 mb-1">Name</label>

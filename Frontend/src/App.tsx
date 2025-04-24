@@ -9,8 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import QuestionDetail from "./pages/QuestionDetail";
 import AddQuestion from "./pages/AddQuestion";
 import Profile from "./pages/Profile";
-import Login from './pages/Login';
-import Signup from './pages/Signup';
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -37,14 +37,22 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-cyber-black">
-        {/* ✅ Pass auth state to Navbar */}
-        <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
-        
+        <Navbar
+          isAuthenticated={isAuthenticated}
+          setIsAuthenticated={setIsAuthenticated}
+        />
+
         <main className="container mx-auto px-4 py-8">
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-            <Route path="/signup" element={<Signup setIsAuthenticated={setIsAuthenticated} />} />
+            <Route
+              path="/login"
+              element={<Login setIsAuthenticated={setIsAuthenticated} />}
+            />
+            <Route
+              path="/signup"
+              element={<Signup setIsAuthenticated={setIsAuthenticated} />}
+            />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/question/:id" element={<QuestionDetail />} />
             <Route path="/add-question" element={<AddQuestion />} />
