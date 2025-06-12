@@ -8,15 +8,9 @@ exports.addQuestion = async (req, res) => {
     let userId = null;
 
     const token = req.cookies?.token;
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        userId = decoded.id;
-        console.log("Decoded user ID:", userId);
-      } catch (err) {
-        console.warn("Invalid or expired token. Proceeding without user.");
-      }
-    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    userId = decoded.id;
 
     console.log("Incoming cookies:", req.cookies);
 
@@ -49,9 +43,36 @@ exports.addQuestion = async (req, res) => {
 
 exports.getQuestions = async (req, res) => {
   try {
-    const questions = await Question.find();
-    res.status(200).json(questions);
+    const token = req.cookies?.token;
+
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const user = await User.findById(userId).populate("solvedQuestions");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user.solvedQuestions);
   } catch (error) {
+    console.error("Error fetching questions:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getQuestionById = async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id);
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+    res.status(200).json(question);
+  } catch (error) {
+    console.error("Error fetching question:", error);
     res.status(500).json({ message: error.message });
   }
 };

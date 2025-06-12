@@ -1,59 +1,10 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import { Clock, BookOpen, Code2, MessageCircle, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-
-const mockQuestion = {
-  id: "1",
-  title: "Two Sum",
-  description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
-
-You may assume that each input would have exactly one solution, and you may not use the same element twice.
-
-You can return the answer in any order.`,
-  difficulty: "Easy",
-  topic: "Arrays",
-  sampleInput: `nums = [2,7,11,15], target = 9`,
-  sampleOutput: `[0,1]`,
-  solutions: [
-    {
-      id: "1",
-      language: "javascript",
-      code: `function twoSum(nums, target) {
-  const map = new Map();
-  
-  for (let i = 0; i < nums.length; i++) {
-    const complement = target - nums[i];
-    
-    if (map.has(complement)) {
-      return [map.get(complement), i];
-    }
-    
-    map.set(nums[i], i);
-  }
-  
-  return [];
-}`,
-      explanation: `This solution uses a hash map to store the numbers we've seen so far:
-
-1. We iterate through the array once
-2. For each number, we calculate its complement (target - current number)
-3. If the complement exists in our map, we've found our pair
-4. Otherwise, we add the current number to our map
-      
-Time Complexity: O(n)
-Space Complexity: O(n)`,
-      createdAt: "2024-03-15T10:00:00Z",
-    },
-  ],
-  status: "Solved",
-  createdAt: "2024-03-15T10:00:00Z",
-  updatedAt: "2024-03-15T10:00:00Z",
-};
 
 const difficultyColors = {
   Easy: "text-green-400",
@@ -63,7 +14,32 @@ const difficultyColors = {
 
 function QuestionDetail() {
   const { id } = useParams();
-  const question = mockQuestion;
+  const [question, setQuestion] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchQuestion = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/questions/${id}`, {
+          credentials: "include",
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch question");
+        const data = await res.json();
+        setQuestion(data);
+      } catch (err) {
+        console.error("Error fetching question:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestion();
+  }, [id]);
+
+  if (loading) return <p className="text-center">Loading...</p>;
+  if (!question)
+    return <p className="text-center text-red-500">Question not found.</p>;
 
   return (
     <div className="space-y-8">
@@ -116,36 +92,35 @@ function QuestionDetail() {
         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="cyber-card"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Solutions</h2>
-          <button className="cyber-button flex items-center space-x-2">
-            <Code2 className="w-5 h-5" />
-            <span>Add Solution</span>
-          </button>
-        </div>
+      {/* Solution */}
+      {question.solution && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="cyber-card"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">Solution</h2>
+            <button className="cyber-button flex items-center space-x-2">
+              <Code2 className="w-5 h-5" />
+              <span>Edit Solution</span>
+            </button>
+          </div>
 
-        {question.solutions.map((solution) => (
-          <div key={solution.id} className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <span className="px-3 py-1 rounded-full bg-neon-blue/10 text-neon-blue text-sm">
-                  {solution.language}
-                </span>
-                <span className="text-gray-400">
-                  {new Date(solution.createdAt).toLocaleDateString()}
-                </span>
-              </div>
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <span className="px-3 py-1 rounded-full bg-neon-blue/10 text-neon-blue text-sm">
+                {question.solution.language}
+              </span>
+              <span className="text-gray-400">
+                {new Date(question.createdAt).toLocaleDateString()}
+              </span>
             </div>
 
             <div className="cyber-card bg-cyber-darker overflow-hidden">
               <SyntaxHighlighter
-                language={solution.language}
+                language={question.solution.language}
                 style={atomDark}
                 customStyle={{
                   background: "transparent",
@@ -154,7 +129,7 @@ function QuestionDetail() {
                   borderRadius: "0.5rem",
                 }}
               >
-                {solution.code}
+                {question.solution.code}
               </SyntaxHighlighter>
             </div>
 
@@ -164,12 +139,12 @@ function QuestionDetail() {
                 <h3 className="text-lg font-semibold">Explanation</h3>
               </div>
               <div className="prose prose-invert max-w-none">
-                <ReactMarkdown>{solution.explanation}</ReactMarkdown>
+                <ReactMarkdown>{question.solution.explanation}</ReactMarkdown>
               </div>
             </div>
           </div>
-        ))}
-      </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }

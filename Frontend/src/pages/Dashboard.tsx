@@ -21,11 +21,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import { useEffect } from "react";
+
 const mockData = {
   stats: {
     totalSolved: 42,
     streak: 7,
-    practiceTime: 150, 
+    practiceTime: 150,
   },
   progressData: [
     { day: "Mon", questions: 4 },
@@ -76,6 +78,36 @@ const statusColors = {
 function Dashboard() {
   const [selectedTopic, setSelectedTopic] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/questions", {
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch questions");
+        }
+
+        const data = await res.json();
+        setQuestions(data);
+      } catch (err) {
+        console.error(err);
+        setError("Something went wrong while loading questions");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
+  console.log("Questions:", questions);
 
   return (
     <div className="space-y-8">
@@ -221,37 +253,41 @@ function Dashboard() {
         </div>
 
         <div className="space-y-4">
-          {mockData.questions.map((question) => (
+          {questions.map((question) => (
             <Link
-              key={question.id}
-              to={`/question/${question.id}`}
-              className="block cyber-card hover:border-neon-purple/40 transition-colors"
+              key={question._id}
+              to={`/question/${question._id}`}
+              className="block cyber-card hover:border-neon-purple/40 transition-colors p-4"
             >
               <div className="flex items-center justify-between">
+                {/* Left Side */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">
+                  <h3 className="text-lg font-semibold mb-1">
                     {question.title}
                   </h3>
-                  <div className="flex items-center space-x-4">
-                    <span className="px-3 py-1 rounded-full bg-neon-purple/10 text-neon-purple text-sm">
+                  <div className="flex items-center space-x-3 text-sm text-gray-400">
+                    <span className="bg-neon-purple/10 text-neon-purple px-3 py-1 rounded-full">
                       {question.topic}
                     </span>
                     <span
-                      className={`text-sm ${
-                        difficultyColors[question.difficulty]
-                      }`}
+                      className={`${difficultyColors[question.difficulty]}`}
                     >
                       {question.difficulty}
                     </span>
                   </div>
                 </div>
-                <span
-                  className={`px-4 py-2 rounded-lg text-sm ${
-                    statusColors[question.status]
-                  }`}
-                >
-                  {question.status}
-                </span>
+
+                {/* Right Side */}
+                <div className="text-xs text-right text-gray-400">
+                  <p>Added on</p>
+                  <p className="font-medium text-sm">
+                    {new Date(question.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
               </div>
             </Link>
           ))}
