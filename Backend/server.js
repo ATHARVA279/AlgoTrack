@@ -2,17 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
+const cookieParser = require("cookie-parser");
 
 dotenv.config();
 connectDB();
 
 const app = express();
+app.use(cookieParser());
+app.use(express.json());
 
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  "https://algo-track-tau.vercel.app/api/auth/signup",
-  "https://algo-track-tau.vercel.app/api/auth/login",
   "https://algo-track-tau.vercel.app",
 ];
 
@@ -20,16 +21,14 @@ app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
+        callback(null, true);
       } else {
-        return callback(new Error("Not allowed by CORS"));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
   })
 );
-
-app.use(express.json());
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/questions", require("./routes/questionsRoutes"));

@@ -3,38 +3,31 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 const signupUser = async (req, res) => {
-  console.log("📩 Received signup request:", req.body);
-
   const { username, email, password } = req.body;
 
   try {
-    let existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log("⚠️ User already exists with email:", email);
       return res.status(400).json({ msg: "User already exists" });
     }
 
     const newUser = new User({ username, email, password });
-    console.log("📦 New user object created:", newUser);
-
     await newUser.save();
-    console.log("✅ New user saved to DB");
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-    console.log("🔐 JWT token created:", token);
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
+      secure: false,
       sameSite: "None",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(201).json({ user: { id: newUser._id, email }, token });
-    console.log("🚀 Signup successful, response sent");
+    res.status(201).json({ user: { id: newUser._id, email } });
   } catch (err) {
-    console.error("❌ Error during signup:", err);
+    console.error("Signup error:", err);
     res.status(500).json({ msg: "Server error during signup" });
   }
 };
@@ -55,19 +48,41 @@ const loginUser = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
+      secure: false,
       sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({ success: true, user: { id: user._id, email } });
   } catch (err) {
-    console.error("❌ Error during login:", err);
+    console.error("Login error:", err);
     res.status(500).json({ msg: "Server error" });
+  }
+};
+
+const getMe = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ msg: "No token. Unauthorized." });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error("GetMe error:", err);
+    res.status(401).json({ msg: "Invalid or expired token" });
   }
 };
 
 module.exports = {
   signupUser,
   loginUser,
+  getMe,
 };

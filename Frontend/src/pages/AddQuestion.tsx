@@ -34,18 +34,34 @@ function AddQuestion() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form
     if (!formData.title || !formData.description || !formData.topic) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    // TODO: Submit to backend
-    toast.success("Question added successfully!");
-    navigate("/dashboard");
+    try {
+      const res = await fetch("http://localhost:5000/api/questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to add question");
+      }
+
+      toast.success("Question added successfully!");
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
+    }
   };
 
   const handleChange = (
@@ -54,10 +70,22 @@ function AddQuestion() {
     >
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData((prev) => ({
+        ...prev,
+        [parent]: {
+          ...((prev[parent as keyof typeof prev] as object) || {}),
+          [child]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleCodeChange = (value: string | undefined) => {

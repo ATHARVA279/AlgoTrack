@@ -1,23 +1,38 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Code2, LayoutDashboard, UserCircle, Settings } from "lucide-react";
-import axios from "axios";
+import axios from "../utils/axiosInstance"; // ✅ uses withCredentials: true
 
-export function Navbar({
-  isAuthenticated,
-  setIsAuthenticated,
-}: {
-  isAuthenticated: boolean;
-  setIsAuthenticated: (val: boolean) => void;
-}) {
+export function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState(null); // ✅ will store user info if logged in
 
   const isActive = (path: string) => location.pathname === path;
 
+  const fetchUser = async () => {
+    try {
+      const res = await axios.get("/api/auth/me");
+      if (res.data.success) {
+        setUser(res.data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (err) {
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
   const handleLogout = async () => {
     try {
-      await axios.post("/api/auth/logout", {}, { withCredentials: true });
-      setIsAuthenticated(false);
+      await axios.post("/api/auth/logout");
+      setUser(null);
+      navigate("/login");
     } catch (err) {
       console.error("Logout failed", err);
     }
@@ -29,11 +44,11 @@ export function Navbar({
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
             <Code2 className="w-8 h-8 text-neon-purple" />
-            <span className="text-xl font-bold neon-text">DSA Tracker</span>
+            <span className="text-xl font-bold neon-text">AlgoTrack</span>
           </Link>
 
           <div className="flex items-center space-x-6">
-            {isAuthenticated ? (
+            {user ? (
               <>
                 <Link
                   to="/dashboard"

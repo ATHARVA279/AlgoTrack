@@ -3,11 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../utils/axiosInstance";
 import toast from "react-hot-toast";
 
-interface SignupProps {
-  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const Signup: React.FC<SignupProps> = ({ setIsAuthenticated }) => {
+const Signup = ({onSignup}) => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,14 +14,14 @@ const Signup: React.FC<SignupProps> = ({ setIsAuthenticated }) => {
 
     try {
       const res = await axios.post(
-        "https://algotrack-vujc.onrender.com/api/auth/signup",
+        "/api/auth/signup",
         { username: name, email, password },
         { withCredentials: true }
       );
 
       if (res.data.token) {
         toast.success("Account created successfully!");
-        setIsAuthenticated(true);
+        onSignup();
         navigate("/dashboard");
       } else {
         toast.error(res.data.message || "Signup failed!");

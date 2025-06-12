@@ -1,13 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "../utils/axiosInstance";
-import toast from "react-hot-toast";
+import axios from "../utils/axiosInstance"; 
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-interface LoginProps {
-  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
+const Login = ({ onLogin }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,22 +13,27 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
     e.preventDefault();
 
     try {
+      // Send credentials with cookies
       const res = await axios.post(
-        "https://algotrack-vujc.onrender.com/api/auth/login",
+        "/api/auth/login",
         { email, password },
         { withCredentials: true }
       );
 
       if (res.data.success) {
         toast.success("Logged in successfully!");
-        setIsAuthenticated(true); // ✅ update auth state
+        onLogin?.();
         navigate("/dashboard");
       } else {
-        toast.error(res.data.message || "Login failed!");
+        toast.error("Login failed!");
       }
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Something went wrong!");
+      console.error("Login error:", err);
+      const errorMessage =
+        err.response?.data?.msg ||
+        err.message ||
+        "An unexpected error occurred!";
+      toast.error(`Login failed: ${errorMessage}`);
     }
   };
 
@@ -72,6 +74,7 @@ const Login: React.FC<LoginProps> = ({ setIsAuthenticated }) => {
           </button>
         </form>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
