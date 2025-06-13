@@ -3,25 +3,16 @@ import { Link } from "react-router-dom";
 import {
   PlusCircle,
   Flame,
-  Clock,
   CheckCircle2,
-  TrendingUp,
   BookOpen,
   Filter,
   Search,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 
 import { useEffect } from "react";
+
+import ProgressChart from "../components/ProgressChart";
 
 const mockData = {
   stats: {
@@ -69,19 +60,11 @@ const difficultyColors = {
   Hard: "text-red-400",
 };
 
-const statusColors = {
-  Solved: "bg-green-500/20 text-green-400",
-  "In Progress": "bg-yellow-500/20 text-yellow-400",
-  "Not Started": "bg-gray-500/20 text-gray-400",
-};
-
 function Dashboard() {
   const [selectedTopic, setSelectedTopic] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
   const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -114,14 +97,14 @@ function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-4 gap-6"
       >
         <div className="cyber-card flex items-center">
           <CheckCircle2 className="w-12 h-12 text-neon-purple mr-4" />
           <div>
             <p className="text-gray-400">Total Solved</p>
             <h3 className="text-3xl font-bold neon-text">
-              {mockData.stats.totalSolved}
+              {questions.length} questions
             </h3>
           </div>
         </div>
@@ -136,62 +119,7 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="cyber-card flex items-center">
-          <Clock className="w-12 h-12 text-neon-purple mr-4" />
-          <div>
-            <p className="text-gray-400">Practice Time</p>
-            <h3 className="text-3xl font-bold neon-text">
-              {mockData.stats.practiceTime}h
-            </h3>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="cyber-card"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Weekly Progress</h2>
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="w-5 h-5 text-neon-purple" />
-            <span className="text-gray-400">Last 7 days</span>
-          </div>
-        </div>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={mockData.progressData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="day" stroke="#666" />
-              <YAxis stroke="#666" />
-              <Tooltip
-                contentStyle={{
-                  background: "#1A1A1A",
-                  border: "1px solid rgba(176, 38, 255, 0.2)",
-                  borderRadius: "8px",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="questions"
-                stroke="#B026FF"
-                strokeWidth={2}
-                dot={{ fill: "#B026FF" }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="cyber-card bg-gradient-to-r from-neon-purple/10 to-neon-blue/10"
-      >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between col-span-1 md:col-span-2 cyber-card bg-gradient-to-r from-neon-purple/10 to-neon-blue/10">
           <div className="flex items-center space-x-4">
             <BookOpen className="w-8 h-8 text-neon-purple" />
             <div>
@@ -204,6 +132,8 @@ function Dashboard() {
           <button className="cyber-button">Mark as Done</button>
         </div>
       </motion.div>
+
+      <ProgressChart />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -253,39 +183,43 @@ function Dashboard() {
         </div>
 
         <div className="space-y-4">
-          {questions.map((question) => (
+          {questions.map((entry) => (
             <Link
-              key={question._id}
-              to={`/question/${question._id}`}
+              key={entry._id}
+              to={`/question/${entry.question._id}`}
               className="block cyber-card hover:border-neon-purple/40 transition-colors p-4"
             >
               <div className="flex items-center justify-between">
                 {/* Left Side */}
                 <div>
                   <h3 className="text-lg font-semibold mb-1">
-                    {question.title}
+                    {entry.question.title}
                   </h3>
                   <div className="flex items-center space-x-3 text-sm text-gray-400">
                     <span className="bg-neon-purple/10 text-neon-purple px-3 py-1 rounded-full">
-                      {question.topic}
+                      {entry.question.topic}
                     </span>
                     <span
-                      className={`${difficultyColors[question.difficulty]}`}
+                      className={`${
+                        difficultyColors[entry.question.difficulty]
+                      }`}
                     >
-                      {question.difficulty}
+                      {entry.question.difficulty}
                     </span>
                   </div>
                 </div>
 
-                {/* Right Side */}
                 <div className="text-xs text-right text-gray-400">
                   <p>Added on</p>
                   <p className="font-medium text-sm">
-                    {new Date(question.createdAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {new Date(entry.question.createdAt).toLocaleDateString(
+                      "en-IN",
+                      {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }
+                    )}
                   </p>
                 </div>
               </div>

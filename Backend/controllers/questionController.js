@@ -8,7 +8,6 @@ exports.addQuestion = async (req, res) => {
     let userId = null;
 
     const token = req.cookies?.token;
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     userId = decoded.id;
 
@@ -20,7 +19,14 @@ exports.addQuestion = async (req, res) => {
     if (userId) {
       const updatedUser = await User.findByIdAndUpdate(
         userId,
-        { $addToSet: { solvedQuestions: question._id } },
+        {
+          $addToSet: {
+            solvedQuestions: {
+              question: question._id,
+              solvedAt: new Date(),
+            },
+          },
+        },
         { new: true }
       );
 
@@ -29,6 +35,12 @@ exports.addQuestion = async (req, res) => {
           "Question added to user's solvedQuestions:",
           updatedUser.solvedQuestions
         );
+
+        const streak = calculateStreak(updatedUser.solvedQuestions);
+        console.log("User's current streak:", streak);
+
+        updatedUser.streak = streak;
+        await updatedUser.save();
       } else {
         console.warn("User not found or not updated.");
       }
@@ -52,7 +64,9 @@ exports.getQuestions = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    const user = await User.findById(userId).populate("solvedQuestions");
+    const user = await User.findById(userId).populate(
+      "solvedQuestions.question"
+    );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -76,3 +90,98 @@ exports.getQuestionById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getMonthlyProgress = async (req, res) => {
+  try {
+    const token = req.cookies?.token;
+    if (!token) {
+      console.warn("No token found in cookies");
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+    console.log("Decoded User ID:", userId);
+
+    const user = await User.findById(userId).populate("solvedQuestions");
+    if (!user) {
+      console.warn("User not found in DB");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const today = new Date();
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - 29);
+    console.log(
+      "Start Date:",
+      startDate.toISOString(),
+      "Today:",
+      today.toISOString()
+    );
+
+    const progressMap = {};
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      const key = date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+      });
+      progressMap[key] = 0;
+    }
+
+    console.log("User solvedQuestions count:", user.solvedQuestions.length);
+
+    user.solvedQuestions.forEach((q) => {
+      const solvedDate = new Date(q.solvedAt);
+      const key = solvedDate.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+      });
+
+      if (solvedDate >= startDate && solvedDate <= today) {
+        if (progressMap[key] !== undefined) {
+          progressMap[key]++;
+          console.log(`Counted for ${key}: now ${progressMap[key]}`);
+        } else {
+          console.warn(`Key not in map: ${key}`);
+        }
+      } else {
+        console.log(`Skipped outside range: ${solvedDate.toISOString()}`);
+      }
+    });
+
+    const progressData = Object.entries(progressMap).map(
+      ([day, questions]) => ({ day, questions })
+    );
+
+    console.log("Final progressData:", progressData);
+
+    res.status(200).json(progressData);
+  } catch (error) {
+    console.error("Error fetching progress data:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+function calculateStreak(solvedQuestions) {
+  const dates = solvedQuestions
+    .map((q) => new Date(q.solvedAt).toDateString())
+    .sort((a, b) => new Date(b) - new Date(a));
+
+  const uniqueDates = [...new Set(dates)];
+  let streak = 0;
+  let currentDate = new Date();
+
+  for (const dateStr of uniqueDates) {
+    const date = new Date(dateStr);
+    if (date.toDateString() === currentDate.toDateString()) {
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
