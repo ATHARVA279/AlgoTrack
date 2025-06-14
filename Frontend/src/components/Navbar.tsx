@@ -1,5 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Code2, LayoutDashboard, UserCircle, Settings } from "lucide-react";
+import {
+  Code2,
+  LayoutDashboard,
+  UserCircle,
+  Settings,
+  FileText,
+} from "lucide-react";
 import { useAuth } from "../utils/authContext";
 
 export function Navbar() {
@@ -44,6 +50,19 @@ export function Navbar() {
                 </Link>
 
                 <Link
+                  to="/questions"
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors
+                    ${
+                      isActive("/questions")
+                        ? "bg-neon-purple/20 text-neon-purple"
+                        : "text-gray-400 hover:text-neon-purple hover:bg-neon-purple/10"
+                    }`}
+                >
+                  <FileText className="w-5 h-5" />
+                  <span>Questions</span>
+                </Link>
+
+                <Link
                   to="/profile"
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors
                     ${
@@ -59,7 +78,7 @@ export function Navbar() {
                 <button
                   onClick={handleLogout}
                   className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-400 
-                          hover:text-neon-purple hover:bg-neon-purple/10 transition-colors"
+              hover:text-neon-purple hover:bg-neon-purple/10 transition-colors"
                 >
                   <Settings className="w-5 h-5" />
                   <span>Logout</span>

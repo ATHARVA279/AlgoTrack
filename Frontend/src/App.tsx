@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
-import axios from "./utils/axiosInstance";
 
 import { Navbar } from "./components/Navbar";
 import LandingPage from "./pages/LandingPage";
@@ -17,7 +15,8 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-import { useAuth } from "./utils/authContext"; 
+import { useAuth } from "./utils/authContext";
+import Questions from "./pages/Questions";
 
 function App() {
   const { isAuthenticated, fetchUser } = useAuth();
@@ -74,6 +73,11 @@ function App() {
             <Route
               path="/profile"
               element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
+            />
+
+            <Route
+              path="/Questions"
+              element={isAuthenticated ? <Questions /> : <Navigate to="/login" />}
             />
           </Routes>
         </main>
