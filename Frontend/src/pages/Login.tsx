@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "../utils/axiosInstance"; 
+import axios from "../utils/axiosInstance";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../utils/authContext";
 
-const Login = ({ onLogin }) => {
+const Login = () => {
   const navigate = useNavigate();
+  const { fetchUser } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -13,7 +16,6 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
 
     try {
-      // Send credentials with cookies
       const res = await axios.post(
         "/api/auth/login",
         { email, password },
@@ -22,7 +24,7 @@ const Login = ({ onLogin }) => {
 
       if (res.data.success) {
         toast.success("Logged in successfully!");
-        onLogin?.();
+        await fetchUser(); 
         navigate("/dashboard");
       } else {
         toast.error("Login failed!");

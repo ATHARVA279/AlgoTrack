@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../utils/axiosInstance";
 import toast from "react-hot-toast";
 
-const Signup = ({onSignup}) => {
+const Signup = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

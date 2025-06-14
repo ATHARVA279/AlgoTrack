@@ -14,46 +14,6 @@ import { useEffect } from "react";
 
 import ProgressChart from "../components/ProgressChart";
 
-const mockData = {
-  stats: {
-    totalSolved: 42,
-    streak: 7,
-    practiceTime: 150,
-  },
-  progressData: [
-    { day: "Mon", questions: 4 },
-    { day: "Tue", questions: 3 },
-    { day: "Wed", questions: 5 },
-    { day: "Thu", questions: 2 },
-    { day: "Fri", questions: 6 },
-    { day: "Sat", questions: 4 },
-    { day: "Sun", questions: 3 },
-  ],
-  questions: [
-    {
-      id: "1",
-      title: "Two Sum",
-      topic: "Arrays",
-      difficulty: "Easy",
-      status: "Solved",
-    },
-    {
-      id: "2",
-      title: "Valid Parentheses",
-      topic: "Stack",
-      difficulty: "Medium",
-      status: "In Progress",
-    },
-    {
-      id: "3",
-      title: "Merge K Sorted Lists",
-      topic: "Linked Lists",
-      difficulty: "Hard",
-      status: "Not Started",
-    },
-  ],
-};
-
 const difficultyColors = {
   Easy: "text-green-400",
   Medium: "text-yellow-400",
@@ -65,6 +25,9 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [questions, setQuestions] = useState([]);
+  const [streak, setStreak] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -90,6 +53,22 @@ function Dashboard() {
     fetchQuestions();
   }, []);
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/users/profile", {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setStreak(data.streak);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   console.log("Questions:", questions);
 
   return (
@@ -113,9 +92,7 @@ function Dashboard() {
           <Flame className="w-12 h-12 text-neon-blue mr-4" />
           <div>
             <p className="text-gray-400">Current Streak</p>
-            <h3 className="text-3xl font-bold neon-text">
-              {mockData.stats.streak} days
-            </h3>
+            <h3 className="text-3xl font-bold neon-text">{streak} days</h3>
           </div>
         </div>
 
@@ -129,7 +106,12 @@ function Dashboard() {
               </p>
             </div>
           </div>
-          <button className="cyber-button">Mark as Done</button>
+          <Link
+            to="/add-question"
+            className="cyber-button flex items-center space-x-2"
+          >
+            <span>Mark As Done</span>
+          </Link>
         </div>
       </motion.div>
 
@@ -195,7 +177,7 @@ function Dashboard() {
                   <h3 className="text-lg font-semibold mb-1">
                     {entry.question.title}
                   </h3>
-                  <div className="flex items-center space-x-3 text-sm text-gray-400">
+                  <div className="flex items-center space-x-3 text-l text-gray-400">
                     <span className="bg-neon-purple/10 text-neon-purple px-3 py-1 rounded-full">
                       {entry.question.topic}
                     </span>
@@ -209,7 +191,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div className="text-xs text-right text-gray-400">
+                <div className="text-l text-right text-gray-400">
                   <p>Added on</p>
                   <p className="font-medium text-sm">
                     {new Date(entry.question.createdAt).toLocaleDateString(

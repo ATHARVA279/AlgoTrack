@@ -1,37 +1,17 @@
-import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Code2, LayoutDashboard, UserCircle, Settings } from "lucide-react";
-import axios from "../utils/axiosInstance"; // ✅ uses withCredentials: true
+import { useAuth } from "../utils/authContext";
 
 export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [user, setUser] = useState(null); // ✅ will store user info if logged in
+  const { user, isAuthenticated, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
-  const fetchUser = async () => {
-    try {
-      const res = await axios.get("/api/auth/me");
-      if (res.data.success) {
-        setUser(res.data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      setUser(null);
-    }
-  };
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
   const handleLogout = async () => {
     try {
-      await axios.post("/api/auth/logout");
-      setUser(null);
+      await logout();
       navigate("/login");
     } catch (err) {
       console.error("Logout failed", err);
@@ -48,7 +28,7 @@ export function Navbar() {
           </Link>
 
           <div className="flex items-center space-x-6">
-            {user ? (
+            {isAuthenticated ? (
               <>
                 <Link
                   to="/dashboard"

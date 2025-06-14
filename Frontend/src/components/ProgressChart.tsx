@@ -37,7 +37,6 @@ const ProgressChart = () => {
   const [progressData, setProgressData] = useState([]);
   const [total, setTotal] = useState(0);
   const [bestDay, setBestDay] = useState("");
-  const [average, setAverage] = useState(0);
 
   useEffect(() => {
     const fetchProgress = async () => {

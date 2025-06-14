@@ -17,28 +17,16 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null = loading
+import { useAuth } from "./utils/authContext"; 
 
-  const checkAuth = async () => {
-    try {
-      const res = await axios.get("/api/auth/me");
-      if (res.data.success) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-    } catch (err) {
-      setIsAuthenticated(false);
-    }
-  };
+function App() {
+  const { isAuthenticated, fetchUser } = useAuth();
 
   useEffect(() => {
-    checkAuth();
+    fetchUser();
   }, []);
 
   if (isAuthenticated === null) {
-    // 🔄 Optionally show a loader
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-cyber-black">
         Checking Authentication...
@@ -56,21 +44,13 @@ function App() {
             <Route
               path="/login"
               element={
-                isAuthenticated ? (
-                  <Navigate to="/dashboard" />
-                ) : (
-                  <Login onLogin={checkAuth} />
-                )
+                isAuthenticated ? <Navigate to="/dashboard" /> : <Login />
               }
             />
             <Route
               path="/signup"
               element={
-                isAuthenticated ? (
-                  <Navigate to="/dashboard" />
-                ) : (
-                  <Signup onSignup={checkAuth} />
-                )
+                isAuthenticated ? <Navigate to="/dashboard" /> : <Signup />
               }
             />
             <Route
@@ -97,17 +77,6 @@ function App() {
             />
           </Routes>
         </main>
-
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: "#262626",
-              color: "#fff",
-              border: "1px solid rgba(176, 38, 255, 0.2)",
-            },
-          }}
-        />
       </div>
     </Router>
   );
