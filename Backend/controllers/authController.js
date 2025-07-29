@@ -60,13 +60,61 @@ const loginUser = async (req, res) => {
   }
 };
 
+// const getMe = async (req, res) => {
+//   try {
+//     const token = req.cookies.token;
+//     if (!token) {
+//       return res.status(401).json({ msg: "No token. Unauthorized." });
+//     }
+    
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const user = await User.findById(decoded.id).select("-password");
+
+//     if (!user) {
+//       return res.status(404).json({ msg: "User not found" });
+//     }
+
+//     res.json({ success: true, user });
+//   } catch (err) {
+//     console.error("GetMe error:", err);
+//     res.status(401).json({ msg: "Invalid or expired token" });
+//   }
+// };
+
+function calculateStreak(solvedQuestions) {
+  const dates = solvedQuestions
+    .map((q) => new Date(q.solvedAt).toDateString())
+    .sort((a, b) => new Date(b) - new Date(a));
+
+  const uniqueDates = [...new Set(dates)];
+  let streak = 0;
+  let currentDate = new Date();
+
+  for (const dateStr of uniqueDates) {
+    const date = new Date(dateStr);
+    if (date.toDateString() === currentDate.toDateString()) {
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else if (
+      date.toDateString() ===
+      new Date(currentDate.setDate(currentDate.getDate() - 1)).toDateString()
+    ) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
 const getMe = async (req, res) => {
   try {
     const token = req.cookies.token;
     if (!token) {
       return res.status(401).json({ msg: "No token. Unauthorized." });
     }
-    
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("-password");
 
@@ -74,7 +122,15 @@ const getMe = async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    res.json({ success: true, user });
+    const streak = calculateStreak(user.solvedQuestions);
+
+    res.json({
+      success: true,
+      user: {
+        ...user.toObject(),
+        streak, // dynamically added
+      },
+    });
   } catch (err) {
     console.error("GetMe error:", err);
     res.status(401).json({ msg: "Invalid or expired token" });

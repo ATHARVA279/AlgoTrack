@@ -25,9 +25,10 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [questions, setQuestions] = useState([]);
-  const [streak, setStreak] = useState(null);
+  // const [streak, setStreak] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const streak = sessionStorage.getItem("streak");
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -53,21 +54,21 @@ function Dashboard() {
     fetchQuestions();
   }, []);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/users/profile", {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setStreak(data.streak);
-      } catch (err) {
-        console.error("Error fetching user profile:", err);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const res = await fetch("http://localhost:5000/api/users/profile", {
+  //         credentials: "include",
+  //       });
+  //       const data = await res.json();
+  //       setStreak(data.streak);
+  //     } catch (err) {
+  //       console.error("Error fetching user profile:", err);
+  //     }
+  //   };
 
-    fetchUserData();
-  }, []);
+  //   fetchUserData();
+  // }, []);
 
   console.log("Questions:", questions);
 

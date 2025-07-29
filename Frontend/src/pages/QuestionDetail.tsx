@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Clock, BookOpen, Code2, MessageCircle, ArrowLeft } from "lucide-react";
+import { Code2, MessageCircle, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -43,7 +43,6 @@ function QuestionDetail() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <Link
           to="/dashboard"
@@ -63,7 +62,6 @@ function QuestionDetail() {
         </div>
       </div>
 
-      {/* Question Details */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -92,7 +90,6 @@ function QuestionDetail() {
         </div>
       </motion.div>
 
-      {/* Solution */}
       {question.solution && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

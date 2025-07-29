@@ -1,4 +1,3 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "../utils/axiosInstance";
 
@@ -6,7 +5,7 @@ interface User {
   _id: string;
   username: string;
   email: string;
-  // add other fields if needed
+  streak: number;
 }
 
 interface AuthContextType {
@@ -29,6 +28,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await axios.get("/api/auth/me", { withCredentials: true });
       if (res.data.success) {
         setUser(res.data.user);
+        console.log("User fetched:", res.data.user);
+        sessionStorage.setItem('streak', res.data.user.streak);
       } else {
         setUser(null);
       }
