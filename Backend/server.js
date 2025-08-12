@@ -8,31 +8,48 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cookieParser());
-app.use(express.json());
 
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  "https://algotrack.vercel.app/",
+  "http://localhost:3000",
+  "https://algotrack.vercel.app",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log(`CORS blocked origin: ${origin}`);
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   })
 );
+
+app.use(cookieParser());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/questions", require("./routes/questionsRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
+
+app.use((req, res, next) => {
+  console.log(
+    `${new Date().toISOString()} - ${req.method} ${
+      req.path
+    } - Origin: ${req.get("Origin")}`
+  );
+  next();
+});
 
 app.get("/", (req, res) => res.send("API is running..."));
 
