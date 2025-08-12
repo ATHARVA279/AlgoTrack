@@ -16,7 +16,7 @@ function Profile() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/users/profile", {
+        const res = await fetch("https://algotrack-vujc.onrender.com/api/users/profile", {
           credentials: "include",
         });
         const data = await res.json();

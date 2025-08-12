@@ -43,7 +43,7 @@ function AddQuestion() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/questions", {
+      const res = await fetch("https://algotrack-vujc.onrender.com/api/questions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
