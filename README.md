@@ -19,16 +19,16 @@
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Environment Setup](#environment-setup)
-- [API Documentation](#api-documentation)
-- [Frontend Components](#frontend-components)
-- [Future Enhancements](#future-enhancements)
-- [Contributing](#contributing)
-- [License](#license)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#️-tech-stack)
+- [Quick Start](#-quick-start)
+- [Environment Setup](#-environment-setup)
+- [Frontend Components](#-frontend-components)
+- [Future Enhancements](#-future-enhancements)
+- [Contributing](#-contributing)
+- [Troubleshooting](#-troubleshooting)
+- [License](#-license)
 
 ---
 
@@ -49,12 +49,14 @@ AlgoTrack is a comprehensive platform that revolutionizes how students approach 
 ## ✨ Features
 
 ### 🔐 Authentication & User Management
+
 - Secure JWT-based authentication
 - User registration and login
 - Protected routes and session management
 - User profile with statistics
 
 ### 📝 Question Management
+
 - Add custom coding questions
 - Categorize by difficulty (Easy, Medium, Hard)
 - Topic-based organization
@@ -62,18 +64,21 @@ AlgoTrack is a comprehensive platform that revolutionizes how students approach 
 - Multiple solution storage with explanations
 
 ### 📈 Progress Analytics
+
 - Daily streak tracking
 - Monthly progress visualization
 - Solved questions statistics
 - Performance insights with charts
 
 ### 💻 Code Editor Integration
+
 - Monaco Editor for syntax highlighting
 - Multi-language support
 - Code explanation and analysis
 - Solution storage and retrieval
 
 ### 🎨 Modern UI/UX
+
 - Cyber-themed dark interface
 - Responsive design for all devices
 - Smooth animations with Framer Motion
@@ -84,6 +89,7 @@ AlgoTrack is a comprehensive platform that revolutionizes how students approach 
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **React 18.3.1** - Modern UI library
 - **TypeScript** - Type-safe development
 - **Vite** - Fast build tool and dev server
@@ -95,6 +101,7 @@ AlgoTrack is a comprehensive platform that revolutionizes how students approach 
 - **Axios** - HTTP client
 
 ### Backend
+
 - **Node.js** - JavaScript runtime
 - **Express.js** - Web application framework
 - **MongoDB** - NoSQL database
@@ -104,6 +111,7 @@ AlgoTrack is a comprehensive platform that revolutionizes how students approach 
 - **CORS** - Cross-origin resource sharing
 
 ### Development Tools
+
 - **Nodemon** - Auto-restart development server
 - **ESLint** - Code linting
 - **PostCSS** - CSS processing
@@ -116,6 +124,7 @@ AlgoTrack is a comprehensive platform that revolutionizes how students approach 
 ### Prerequisites
 
 Make sure you have the following installed:
+
 - **Node.js** (v16 or higher)
 - **npm** or **yarn**
 - **MongoDB** (local installation or MongoDB Atlas)
@@ -124,12 +133,14 @@ Make sure you have the following installed:
 ### 🔧 Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/algotrack.git
    cd algotrack
    ```
 
 2. **Backend Setup**
+
    ```bash
    cd Backend
    npm install
@@ -144,6 +155,7 @@ Make sure you have the following installed:
 ### 🌍 Environment Setup
 
 #### Backend Environment (.env)
+
 Create a `.env` file in the `Backend` directory:
 
 ```env
@@ -164,6 +176,7 @@ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,https://yourdomain.c
 ```
 
 #### Frontend Environment (.env.local)
+
 The frontend `.env.local` file is already created:
 
 ```env
@@ -175,22 +188,27 @@ For production, update this to your deployed backend URL.
 ### 🚀 Running the Application
 
 1. **Start MongoDB** (if running locally)
+
    ```bash
    mongod
    ```
 
 2. **Start the Backend Server**
+
    ```bash
    cd Backend
    npm run dev
    ```
+
    The backend will run on `http://localhost:5000`
 
 3. **Start the Frontend Development Server**
+
    ```bash
    cd Frontend
    npm run dev
    ```
+
    The frontend will run on `http://localhost:5173`
 
 4. **Access the Application**
@@ -214,12 +232,14 @@ For production, update this to your deployed backend URL.
 ## 🔮 Future Enhancements
 
 ### 🤖 AI Integration (Planned)
+
 - **Gemini API Integration**: Real-time code analysis
 - **Line-by-line Explanations**: Detailed code breakdown
 - **Big-O Complexity Analysis**: Automatic complexity calculation
 - **Smart Suggestions**: AI-powered problem recommendations
 
 ### 📚 Advanced Features (Roadmap)
+
 - **Spaced Repetition Algorithm**: Enhanced retention system
 - **Collaborative Features**: Study groups and peer reviews
 - **Contest Integration**: LeetCode/CodeChef problem sync
@@ -228,6 +248,7 @@ For production, update this to your deployed backend URL.
 - **Video Solutions**: Integrated explanation videos
 
 ### 🔧 Technical Improvements
+
 - **Microservices Architecture**: Scalable backend design
 - **Redis Caching**: Performance optimization
 - **Docker Containerization**: Easy deployment
@@ -260,11 +281,13 @@ I welcome contributions! Here's how you can help:
 ### Common Issues
 
 1. **CORS Errors**
+
    - Ensure backend is running on port 5000
    - Check that frontend URL is in `allowedOrigins` array
    - Verify environment variables are set correctly
 
 2. **Database Connection Issues**
+
    - Ensure MongoDB is running
    - Check connection string in `.env` file
    - Verify database permissions
