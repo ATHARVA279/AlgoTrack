@@ -23,13 +23,17 @@ const Login = () => {
       );
 
       if (res.data.success) {
+        if (res.data.token) {
+          localStorage.setItem('token', res.data.token);
+        }
+        
         toast.success("Logged in successfully!");
         await fetchUser(); 
         navigate("/dashboard");
       } else {
         toast.error("Login failed!");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login error:", err);
       const errorMessage =
         err.response?.data?.msg ||
@@ -75,6 +79,18 @@ const Login = () => {
             Login
           </button>
         </form>
+        
+        <div className="mt-6 text-center">
+          <p className="text-gray-400">
+            Don't have an account?{" "}
+            <button
+              onClick={() => navigate("/signup")}
+              className="text-neon-purple hover:text-purple-400 transition"
+            >
+              Sign up here
+            </button>
+          </p>
+        </div>
       </div>
       <ToastContainer position="top-right" autoClose={3000} />
     </div>

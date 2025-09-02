@@ -17,18 +17,23 @@ import Signup from "./pages/Signup";
 
 import { useAuth } from "./utils/authContext";
 import Questions from "./pages/Questions";
+import LeetCodeQuestions from "./pages/LeetCodeQuestions";
+import LeetCodeQuestionDetail from "./pages/LeetCodeQuestionDetail";
 
 function App() {
-  const { isAuthenticated, fetchUser } = useAuth();
+  const { isAuthenticated, isLoading, fetchUser } = useAuth();
 
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [fetchUser]);
 
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-cyber-black">
-        Checking Authentication...
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-purple mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
       </div>
     );
   }
@@ -76,8 +81,16 @@ function App() {
             />
 
             <Route
-              path="/Questions"
+              path="/questions"
               element={isAuthenticated ? <Questions /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/leetcode-questions"
+              element={isAuthenticated ? <LeetCodeQuestions /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/leetcode-question/:id"
+              element={isAuthenticated ? <LeetCodeQuestionDetail /> : <Navigate to="/login" />}
             />
           </Routes>
         </main>

@@ -14,9 +14,12 @@ export default function Questions() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await fetch("https://algotrack-vujc.onrender.com/api/questions", {
-          credentials: "include",
-        });
+        const res = await fetch(
+          "https://algotrack-vujc.onrender.com/api/questions",
+          {
+            credentials: "include",
+          }
+        );
 
         if (!res.ok) throw new Error("Failed to fetch questions");
 

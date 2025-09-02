@@ -11,7 +11,7 @@ import { useAuth } from "../utils/authContext";
 export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -63,6 +63,19 @@ export function Navbar() {
                 </Link>
 
                 <Link
+                  to="/leetcode-questions"
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors
+                    ${
+                      isActive("/leetcode-questions")
+                        ? "bg-neon-purple/20 text-neon-purple"
+                        : "text-gray-400 hover:text-neon-purple hover:bg-neon-purple/10"
+                    }`}
+                >
+                  <Code2 className="w-5 h-5" />
+                  <span>LeetCode</span>
+                </Link>
+
+                <Link
                   to="/profile"
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors
                     ${
@@ -93,7 +106,7 @@ export function Navbar() {
                   Login
                 </Link>
                 <Link
-                  to="/register"
+                  to="/signup"
                   className="text-gray-400 hover:text-neon-purple transition"
                 >
                   Register

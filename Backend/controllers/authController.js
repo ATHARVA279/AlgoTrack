@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 const signupUser = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, leetcodeUsername } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
@@ -11,7 +11,19 @@ const signupUser = async (req, res) => {
       return res.status(400).json({ msg: "User already exists" });
     }
 
-    const newUser = new User({ username, email, password });
+    if (leetcodeUsername) {
+      const existingLeetCodeUser = await User.findOne({ leetcodeUsername });
+      if (existingLeetCodeUser) {
+        return res.status(400).json({ msg: "LeetCode username already linked to another account" });
+      }
+    }
+
+    const newUser = new User({ 
+      username, 
+      email, 
+      password,
+      leetcodeUsername: leetcodeUsername || undefined
+    });
     await newUser.save();
 
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
@@ -25,7 +37,15 @@ const signupUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(201).json({ user: { id: newUser._id, email } });
+    res.status(201).json({ 
+      user: { 
+        id: newUser._id, 
+        username: newUser.username,
+        email: newUser.email,
+        leetcodeUsername: newUser.leetcodeUsername
+      },
+      token: token 
+    });
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ msg: "Server error during signup" });
@@ -53,7 +73,16 @@ const loginUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({ success: true, user: { id: user._id, email } });
+    res.status(200).json({ 
+      success: true, 
+      user: { 
+        id: user._id, 
+        username: user.username,
+        email: user.email,
+        leetcodeUsername: user.leetcodeUsername
+      },
+      token: token 
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ msg: "Server error" });
@@ -110,7 +139,15 @@ function calculateStreak(solvedQuestions) {
 
 const getMe = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    let token = req.cookies.token;
+    
+    if (!token && req.headers.authorization) {
+      const authHeader = req.headers.authorization;
+      if (authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
     if (!token) {
       return res.status(401).json({ msg: "No token. Unauthorized." });
     }
@@ -128,7 +165,7 @@ const getMe = async (req, res) => {
       success: true,
       user: {
         ...user.toObject(),
-        streak, // dynamically added
+        streak,
       },
     });
   } catch (err) {
@@ -137,8 +174,28 @@ const getMe = async (req, res) => {
   }
 };
 
+const logoutUser = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Logged out successfully" 
+    });
+  } catch (err) {
+    console.error("Logout error:", err);
+    res.status(500).json({ msg: "Server error during logout" });
+  }
+};
+
 module.exports = {
   signupUser,
   loginUser,
   getMe,
+  logoutUser,
 };

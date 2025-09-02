@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axiosInstance";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import { useAuth } from "../utils/authContext";
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { fetchUser } = useAuth();
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [leetcodeUsername, setLeetcodeUsername] = useState("");
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,20 +19,30 @@ const Signup = () => {
     try {
       const res = await axios.post(
         "/api/auth/signup",
-        { username: name, email, password },
+        { 
+          username: name, 
+          email, 
+          password,
+          leetcodeUsername: leetcodeUsername.trim() || undefined
+        },
         { withCredentials: true }
       );
 
-      if (res.data.token) {
+      if (res.status === 201) {
+        if (res.data.token) {
+          localStorage.setItem('token', res.data.token);
+        }
+        
         toast.success("Account created successfully!");
-        onSignup();
+        await fetchUser(); 
         navigate("/dashboard");
       } else {
         toast.error(res.data.message || "Signup failed!");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.msg || "Something went wrong!");
+      const error = err as { response?: { data?: { msg?: string } }; message?: string };
+      toast.error(error.response?.data?.msg || error.message || "Something went wrong!");
     }
   };
 
@@ -72,6 +86,21 @@ const Signup = () => {
               required
             />
           </div>
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">
+              LeetCode Username <span className="text-gray-500">(Optional)</span>
+            </label>
+            <input
+              type="text"
+              value={leetcodeUsername}
+              onChange={(e) => setLeetcodeUsername(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-800 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-neon-purple"
+              placeholder="Your LeetCode username"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Add your LeetCode username to sync your solved problems automatically
+            </p>
+          </div>
           <button
             type="submit"
             className="w-full bg-neon-purple text-white font-semibold py-2 rounded-md hover:bg-purple-700 transition"
@@ -79,7 +108,20 @@ const Signup = () => {
             Sign Up
           </button>
         </form>
+        
+        <div className="mt-6 text-center">
+          <p className="text-gray-400">
+            Already have an account?{" "}
+            <button
+              onClick={() => navigate("/login")}
+              className="text-neon-purple hover:text-purple-400 transition"
+            >
+              Login here
+            </button>
+          </p>
+        </div>
       </div>
+      <Toaster position="top-right" />
     </div>
   );
 };
