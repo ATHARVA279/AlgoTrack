@@ -3,7 +3,9 @@ const {
   syncLeetCodeData,
   getLeetCodeQuestions,
   getLeetCodeQuestionById,
-  updateUserSolution
+  updateUserSolution,
+  populatePopularQuestions,
+  getQuestionsCount
 } = require("../controllers/leetcodeController");
 
 const router = express.Router();
@@ -15,6 +17,10 @@ router.get("/test", (req, res) => {
 });
 
 router.post("/sync", syncLeetCodeData);
+
+router.post("/populate", populatePopularQuestions);
+
+router.get("/questions/count", getQuestionsCount);
 
 router.get("/questions", (req, res, next) => {
   console.log("🚀 Route: GET /api/leetcode/questions hit");

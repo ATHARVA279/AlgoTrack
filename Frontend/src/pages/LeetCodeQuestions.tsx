@@ -41,6 +41,7 @@ export default function LeetCodeQuestions() {
   const [syncing, setSyncing] = useState(false);
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
   const [showSyncModal, setShowSyncModal] = useState(false);
+  const [questionsCount, setQuestionsCount] = useState({ total: 0, solved: 0, remaining: 0 });
 
   const filterQuestions = useCallback(() => {
     console.log("🔍 Filtering questions...");
@@ -86,14 +87,25 @@ export default function LeetCodeQuestions() {
     filterQuestions();
   }, [filterQuestions]);
 
+  const fetchQuestionsCount = async () => {
+    try {
+      const response = await axios.get("/api/leetcode/questions/count");
+      setQuestionsCount(response.data);
+      console.log("📊 Questions count:", response.data);
+    } catch (error) {
+      console.error("❌ Error fetching questions count:", error);
+    }
+  };
+
   const fetchLeetCodeQuestions = async () => {
     try {
-      console.log("🔄 Fetching LeetCode questions...");
+      console.log("🔄 Fetching ALL LeetCode questions...");
       setLoading(true);
       const response = await axios.get("/api/leetcode/questions");
       console.log("✅ LeetCode questions response:", response.data);
       console.log("📊 Number of questions received:", response.data.length);
       setQuestions(response.data);
+      await fetchQuestionsCount();
     } catch (error) {
       console.error("❌ Error fetching LeetCode questions:", error);
       toast.error("Failed to fetch LeetCode questions");
@@ -134,7 +146,8 @@ export default function LeetCodeQuestions() {
         if (error.code === 'ECONNABORTED') {
           errorMessage = "Sync is taking longer than expected. Please try again or check your LeetCode username.";
         } else if ('response' in error && error.response && typeof error.response === 'object' && 'data' in error.response) {
-          errorMessage = (error.response.data as unknown)?.message || errorMessage;
+          const responseData = error.response.data as any;
+          errorMessage = responseData?.message || errorMessage;
         }
       }
       
@@ -150,10 +163,61 @@ export default function LeetCodeQuestions() {
     Hard: "text-red-400 bg-red-400/10",
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <p className="text-center text-gray-400">Loading LeetCode questions...</p>
+      <div className="space-y-6">
+        {/* Loading Header */}
+        <div className="cyber-card animate-pulse">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 space-y-4 md:space-y-0">
+            <div>
+              <div className="h-8 bg-gray-700 rounded w-64 mb-2"></div>
+              <div className="h-4 bg-gray-700 rounded w-48"></div>
+            </div>
+            <div className="h-10 bg-gray-700 rounded w-32"></div>
+          </div>
+          
+          {/* Loading Filters */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-4 md:space-y-0 md:space-x-4">
+            <div className="h-10 bg-gray-700 rounded flex-1"></div>
+            <div className="h-10 bg-gray-700 rounded w-40"></div>
+            <div className="h-6 bg-gray-700 rounded w-24"></div>
+          </div>
+        </div>
+
+        {/* Loading Questions */}
+        <div className="space-y-4">
+          {[...Array(8)].map((_, index) => (
+            <div key={index} className="cyber-card animate-pulse p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="w-6 h-6 bg-gray-700 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className="h-6 bg-gray-700 rounded w-80"></div>
+                      <div className="w-4 h-4 bg-gray-700 rounded"></div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="h-6 bg-gray-700 rounded-full w-16"></div>
+                      <div className="h-6 bg-gray-700 rounded-full w-20"></div>
+                      <div className="h-6 bg-gray-700 rounded-full w-24"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="h-8 bg-gray-700 rounded w-20"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="text-center py-4">
+          <div className="inline-flex items-center space-x-2 text-gray-400">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-neon-purple"></div>
+            <span>Loading LeetCode questions...</span>
+          </div>
+        </div>
+      </div>
     );
+  }
 
   return (
     <div className="space-y-6">
@@ -212,8 +276,7 @@ export default function LeetCodeQuestions() {
           <div>
             <h2 className="text-2xl font-bold">LeetCode Questions</h2>
             <p className="text-gray-400">
-              {questions.length} questions •{" "}
-              {questions.filter((q) => q.isSolved).length} solved
+              {questions.length} questions displayed • {questionsCount.solved} solved • {questionsCount.total} total in database
             </p>
           </div>
 
@@ -221,18 +284,19 @@ export default function LeetCodeQuestions() {
             <button
               onClick={async () => {
                 try {
-                  console.log("🧪 Testing LeetCode API...");
-                  const response = await axios.get("/api/leetcode/test");
-                  console.log("✅ Test response:", response.data);
-                  toast.success("LeetCode API is working!");
+                  console.log("🔄 Populating popular questions...");
+                  const response = await axios.post("/api/leetcode/populate");
+                  console.log("✅ Populate response:", response.data);
+                  toast.success(response.data.message);
+                  await fetchLeetCodeQuestions();
                 } catch (error) {
-                  console.error("❌ Test failed:", error);
-                  toast.error("LeetCode API test failed");
+                  console.error("❌ Populate failed:", error);
+                  toast.error("Failed to populate questions");
                 }
               }}
               className="cyber-button"
             >
-              Test API
+              {questions.length === 0 ? "Load Sample Questions" : "Add More Questions"}
             </button>
             <button
               onClick={() => setShowSyncModal(true)}

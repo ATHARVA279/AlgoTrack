@@ -7,8 +7,9 @@ class LeetCodeService {
     this.axiosInstance = axios.create({
       timeout: 10000, // 10 second timeout for individual requests
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
     });
   }
 
@@ -20,21 +21,24 @@ class LeetCodeService {
           query,
           variables,
         });
-        
+
         if (response.data.errors) {
           throw new Error(`GraphQL Error: ${response.data.errors[0].message}`);
         }
-        
+
         return response.data;
       } catch (error) {
-        console.error(`❌ LeetCode API request failed (attempt ${i + 1}):`, error.message);
-        
+        console.error(
+          `❌ LeetCode API request failed (attempt ${i + 1}):`,
+          error.message
+        );
+
         if (i === retries) {
           throw error;
         }
-        
+
         // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
       }
     }
   }
@@ -90,7 +94,9 @@ class LeetCodeService {
 
   async getUserRecentSubmissions(username, limit = 20) {
     try {
-      console.log(`🔍 Fetching recent submissions for ${username} (limit: ${limit})`);
+      console.log(
+        `🔍 Fetching recent submissions for ${username} (limit: ${limit})`
+      );
       const query = `
         query recentAcSubmissions($username: String!, $limit: Int!) {
           recentAcSubmissionList(username: $username, limit: $limit) {
@@ -107,11 +113,11 @@ class LeetCodeService {
 
       const response = await this.makeRequest(query, { username, limit });
       const submissions = response.data.recentAcSubmissionList;
-      
+
       if (!submissions) {
         throw new Error("User not found or no submissions available");
       }
-      
+
       console.log(`✅ Found ${submissions.length} recent submissions`);
       return submissions;
     } catch (error) {
@@ -156,12 +162,12 @@ class LeetCodeService {
 
       const response = await this.makeRequest(query, { titleSlug });
       const question = response.data.question;
-      
+
       if (!question) {
         console.log(`⚠️ No question data found for: ${titleSlug}`);
         return null;
       }
-      
+
       console.log(`✅ Got problem details for: ${question.title}`);
       return question;
     } catch (error) {
