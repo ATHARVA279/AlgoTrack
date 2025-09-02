@@ -41,6 +41,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/questions", require("./routes/questionsRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
+
+console.log("🔗 Mounting LeetCode routes at /api/leetcode");
 app.use("/api/leetcode", require("./routes/leetcodeRoutes"));
 
 app.use((req, res, next) => {

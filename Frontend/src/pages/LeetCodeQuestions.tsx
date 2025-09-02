@@ -1,6 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, RefreshCw, CheckCircle2, Circle, ExternalLink } from "lucide-react";
+import {
+  Search,
+  Filter,
+  RefreshCw,
+  CheckCircle2,
+  Circle,
+  ExternalLink,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "../utils/axiosInstance";
 import { toast } from "react-hot-toast";
@@ -24,7 +31,9 @@ interface LeetCodeQuestion {
 export default function LeetCodeQuestions() {
   const { user } = useAuth();
   const [questions, setQuestions] = useState<LeetCodeQuestion[]>([]);
-  const [filteredQuestions, setFilteredQuestions] = useState<LeetCodeQuestion[]>([]);
+  const [filteredQuestions, setFilteredQuestions] = useState<
+    LeetCodeQuestion[]
+  >([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   const [showSolvedOnly, setShowSolvedOnly] = useState(false);
@@ -39,22 +48,25 @@ export default function LeetCodeQuestions() {
     console.log("🔎 Search query:", searchQuery);
     console.log("📊 Selected difficulty:", selectedDifficulty);
     console.log("✅ Show solved only:", showSolvedOnly);
-    
+
     let filtered = questions;
 
     if (searchQuery) {
-      filtered = filtered.filter(q =>
-        q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        q.topicTags.some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      filtered = filtered.filter(
+        (q) =>
+          q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          q.topicTags.some((tag) =>
+            tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
       );
     }
 
     if (selectedDifficulty !== "All") {
-      filtered = filtered.filter(q => q.difficulty === selectedDifficulty);
+      filtered = filtered.filter((q) => q.difficulty === selectedDifficulty);
     }
 
     if (showSolvedOnly) {
-      filtered = filtered.filter(q => q.isSolved);
+      filtered = filtered.filter((q) => q.isSolved);
     }
 
     console.log("📋 Filtered questions count:", filtered.length);
@@ -92,7 +104,7 @@ export default function LeetCodeQuestions() {
 
   const syncLeetCodeData = async () => {
     const usernameToSync = leetcodeUsername.trim() || user?.leetcodeUsername;
-    
+
     if (!usernameToSync) {
       toast.error("Please enter your LeetCode username");
       return;
@@ -101,24 +113,23 @@ export default function LeetCodeQuestions() {
     try {
       setSyncing(true);
       const response = await axios.post("/api/leetcode/sync", {
-        leetcodeUsername: usernameToSync
+        leetcodeUsername: usernameToSync,
       });
-      
+
       toast.success(response.data.message);
       setShowSyncModal(false);
       await fetchLeetCodeQuestions();
     } catch (error: unknown) {
       console.error("Error syncing LeetCode data:", error);
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as unknown).response?.data?.message 
-        : "Failed to sync LeetCode data";
+      const errorMessage =
+        error instanceof Error && "response" in error
+          ? (error as unknown).response?.data?.message
+          : "Failed to sync LeetCode data";
       toast.error(errorMessage);
     } finally {
       setSyncing(false);
     }
   };
-
-
 
   const difficultyColors = {
     Easy: "text-green-400 bg-green-400/10",
@@ -126,7 +137,10 @@ export default function LeetCodeQuestions() {
     Hard: "text-red-400 bg-red-400/10",
   };
 
-  if (loading) return <p className="text-center text-gray-400">Loading LeetCode questions...</p>;
+  if (loading)
+    return (
+      <p className="text-center text-gray-400">Loading LeetCode questions...</p>
+    );
 
   return (
     <div className="space-y-6">
@@ -136,21 +150,18 @@ export default function LeetCodeQuestions() {
           <div className="bg-gray-900 p-6 rounded-xl max-w-md w-full mx-4">
             <h3 className="text-xl font-bold mb-4">Sync LeetCode Data</h3>
             <p className="text-gray-400 mb-4">
-              {user?.leetcodeUsername 
-                ? `Sync data for: ${user.leetcodeUsername}` 
-                : "Enter your LeetCode username to sync your solved problems:"
-              }
+              {user?.leetcodeUsername
+                ? `Sync data for: ${user.leetcodeUsername}`
+                : "Enter your LeetCode username to sync your solved problems:"}
             </p>
-            {!user?.leetcodeUsername && (
-              <input
-                type="text"
-                placeholder="LeetCode username"
-                value={leetcodeUsername}
-                onChange={(e) => setLeetcodeUsername(e.target.value)}
-                className="cyber-input w-full mb-4"
-                disabled={syncing}
-              />
-            )}
+            <input
+              type="text"
+              placeholder="LeetCode username"
+              value={leetcodeUsername}
+              onChange={(e) => setLeetcodeUsername(e.target.value)}
+              className="cyber-input w-full mb-4"
+              disabled={syncing}
+            />
             <div className="flex space-x-3">
               <button
                 onClick={syncLeetCodeData}
@@ -188,17 +199,36 @@ export default function LeetCodeQuestions() {
           <div>
             <h2 className="text-2xl font-bold">LeetCode Questions</h2>
             <p className="text-gray-400">
-              {questions.length} questions • {questions.filter(q => q.isSolved).length} solved
+              {questions.length} questions •{" "}
+              {questions.filter((q) => q.isSolved).length} solved
             </p>
           </div>
 
-          <button
-            onClick={() => setShowSyncModal(true)}
-            className="cyber-button flex items-center space-x-2"
-          >
-            <RefreshCw className="w-5 h-5" />
-            <span>Sync LeetCode</span>
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={async () => {
+                try {
+                  console.log("🧪 Testing LeetCode API...");
+                  const response = await axios.get("/api/leetcode/test");
+                  console.log("✅ Test response:", response.data);
+                  toast.success("LeetCode API is working!");
+                } catch (error) {
+                  console.error("❌ Test failed:", error);
+                  toast.error("LeetCode API test failed");
+                }
+              }}
+              className="cyber-button"
+            >
+              Test API
+            </button>
+            <button
+              onClick={() => setShowSyncModal(true)}
+              className="cyber-button flex items-center space-x-2"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span>Sync LeetCode</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -277,10 +307,14 @@ export default function LeetCodeQuestions() {
                   </div>
 
                   <div className="flex items-center space-x-3 text-sm">
-                    <span className={`px-3 py-1 rounded-full ${difficultyColors[question.difficulty]}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full ${
+                        difficultyColors[question.difficulty]
+                      }`}
+                    >
                       {question.difficulty}
                     </span>
-                    
+
                     {question.topicTags.slice(0, 3).map((tag) => (
                       <span
                         key={tag.slug}
@@ -289,7 +323,7 @@ export default function LeetCodeQuestions() {
                         {tag.name}
                       </span>
                     ))}
-                    
+
                     {question.topicTags.length > 3 && (
                       <span className="text-gray-400">
                         +{question.topicTags.length - 3} more
@@ -299,9 +333,15 @@ export default function LeetCodeQuestions() {
 
                   {question.isSolved && (
                     <div className="mt-2 text-sm text-gray-400">
-                      <span>Solved • {question.submissionCount} submission(s)</span>
+                      <span>
+                        Solved • {question.submissionCount} submission(s)
+                      </span>
                       {question.lastSolvedAt && (
-                        <span> • {new Date(question.lastSolvedAt).toLocaleDateString()}</span>
+                        <span>
+                          {" "}
+                          •{" "}
+                          {new Date(question.lastSolvedAt).toLocaleDateString()}
+                        </span>
                       )}
                     </div>
                   )}
@@ -323,10 +363,9 @@ export default function LeetCodeQuestions() {
         {filteredQuestions.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-400 text-lg">
-              {questions.length === 0 
+              {questions.length === 0
                 ? "No LeetCode questions found. Sync your data to get started!"
-                : "No questions match your filters."
-              }
+                : "No questions match your filters."}
             </p>
           </div>
         )}

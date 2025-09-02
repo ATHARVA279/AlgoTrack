@@ -161,16 +161,72 @@ const getMe = async (req, res) => {
 
     const streak = calculateStreak(user.solvedQuestions);
 
+    const userObject = {
+      ...user.toObject(),
+      streak,
+    };
+    
+    console.log("👤 Backend: Returning user object:", userObject);
+    console.log("🔗 Backend: User LeetCode username:", userObject.leetcodeUsername);
+    
     res.json({
       success: true,
-      user: {
-        ...user.toObject(),
-        streak,
-      },
+      user: userObject,
     });
   } catch (err) {
     console.error("GetMe error:", err);
     res.status(401).json({ msg: "Invalid or expired token" });
+  }
+};
+
+const updateLeetCodeUsername = async (req, res) => {
+  try {
+    const { leetcodeUsername } = req.body;
+    
+    let token = req.cookies.token;
+    if (!token && req.headers.authorization) {
+      const authHeader = req.headers.authorization;
+      if (authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      return res.status(401).json({ msg: "No token. Unauthorized." });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if username is already taken
+    if (leetcodeUsername) {
+      const existingUser = await User.findOne({ 
+        leetcodeUsername, 
+        _id: { $ne: decoded.id } 
+      });
+      if (existingUser) {
+        return res.status(400).json({ msg: "LeetCode username already linked to another account" });
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(
+      decoded.id, 
+      { leetcodeUsername: leetcodeUsername || undefined },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "LeetCode username updated successfully",
+      user: user.toObject()
+    });
+
+  } catch (err) {
+    console.error("Update LeetCode username error:", err);
+    res.status(500).json({ msg: "Server error during update" });
   }
 };
 
@@ -197,5 +253,6 @@ module.exports = {
   signupUser,
   loginUser,
   getMe,
+  updateLeetCodeUsername,
   logoutUser,
 };
