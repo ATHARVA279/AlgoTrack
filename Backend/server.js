@@ -38,13 +38,6 @@ app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/questions", require("./routes/questionsRoutes"));
-app.use("/api/users", require("./routes/userRoutes"));
-
-console.log("🔗 Mounting LeetCode routes at /api/leetcode");
-app.use("/api/leetcode", require("./routes/leetcodeRoutes"));
-
 app.use((req, res, next) => {
   console.log(
     `${new Date().toISOString()} - ${req.method} ${
@@ -53,6 +46,11 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/questions", require("./routes/questionsRoutes"));
+app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/leetcode", require("./routes/leetcodeRoutes"));
 
 app.get("/", (req, res) => res.send("API is running..."));
 

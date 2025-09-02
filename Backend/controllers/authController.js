@@ -47,7 +47,6 @@ const signupUser = async (req, res) => {
       token: token 
     });
   } catch (err) {
-    console.error("Signup error:", err);
     res.status(500).json({ msg: "Server error during signup" });
   }
 };
@@ -84,31 +83,11 @@ const loginUser = async (req, res) => {
       token: token 
     });
   } catch (err) {
-    console.error("Login error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
 
-// const getMe = async (req, res) => {
-//   try {
-//     const token = req.cookies.token;
-//     if (!token) {
-//       return res.status(401).json({ msg: "No token. Unauthorized." });
-//     }
-    
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     const user = await User.findById(decoded.id).select("-password");
 
-//     if (!user) {
-//       return res.status(404).json({ msg: "User not found" });
-//     }
-
-//     res.json({ success: true, user });
-//   } catch (err) {
-//     console.error("GetMe error:", err);
-//     res.status(401).json({ msg: "Invalid or expired token" });
-//   }
-// };
 
 function calculateStreak(solvedQuestions) {
   const dates = solvedQuestions
@@ -166,15 +145,11 @@ const getMe = async (req, res) => {
       streak,
     };
     
-    console.log("👤 Backend: Returning user object:", userObject);
-    console.log("🔗 Backend: User LeetCode username:", userObject.leetcodeUsername);
-    
     res.json({
       success: true,
       user: userObject,
     });
   } catch (err) {
-    console.error("GetMe error:", err);
     res.status(401).json({ msg: "Invalid or expired token" });
   }
 };
@@ -225,7 +200,6 @@ const updateLeetCodeUsername = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Update LeetCode username error:", err);
     res.status(500).json({ msg: "Server error during update" });
   }
 };
@@ -244,7 +218,6 @@ const logoutUser = async (req, res) => {
       message: "Logged out successfully" 
     });
   } catch (err) {
-    console.error("Logout error:", err);
     res.status(500).json({ msg: "Server error during logout" });
   }
 };

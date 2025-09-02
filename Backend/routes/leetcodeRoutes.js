@@ -5,6 +5,7 @@ const {
   getLeetCodeQuestions,
   getLeetCodeQuestionById,
   updateUserSolution,
+  addManualQuestion,
   populatePopularQuestions,
   getQuestionsCount
 } = require("../controllers/leetcodeController");
@@ -31,6 +32,12 @@ router.get("/questions", (req, res, next) => {
 
 router.get("/questions/:id", getLeetCodeQuestionById);
 
-router.put("/questions/:id/solution", updateUserSolution);
+router.put("/questions/:id/solution", (req, res, next) => {
+  console.log("🚀 Route: PUT /api/leetcode/questions/:id/solution hit");
+  console.log("📝 Request body:", req.body);
+  next();
+}, updateUserSolution);
+
+router.post("/questions/add-manual", addManualQuestion);
 
 module.exports = router;

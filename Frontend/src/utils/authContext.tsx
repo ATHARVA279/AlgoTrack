@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import axios from "../utils/axiosInstance";
 
 interface User {
@@ -32,8 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const res = await axios.get("/api/auth/me", { withCredentials: true });
       if (res.data.success) {
         setUser(res.data.user);
-        console.log("User fetched:", res.data.user);
-        sessionStorage.setItem('streak', res.data.user.streak);
+        sessionStorage.setItem("streak", res.data.user.streak);
       } else {
         setUser(null);
       }
@@ -50,7 +55,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error("Logout request failed:", error);
     } finally {
-      // Clear local storage token and user data
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       sessionStorage.removeItem("streak");
@@ -63,7 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [fetchUser]);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, fetchUser, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated, isLoading, fetchUser, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

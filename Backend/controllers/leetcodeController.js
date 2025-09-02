@@ -143,16 +143,22 @@ exports.syncAllLeetCodeData = async (req, res) => {
       `✅ Backend: COMPREHENSIVE sync completed. Synced ${syncedQuestions.length} questions`
     );
 
+    const message = profile.apiLimitation 
+      ? `Synced ${syncedQuestions.length} questions! ⚠️ LeetCode API only returns recent submissions (${profile.foundSubmissions}/${profile.totalSolved}). This is a known limitation.`
+      : `Successfully synced ALL ${syncedQuestions.length} solved questions from LeetCode! 🎉`;
+
     res.json({
       success: true,
-      message: `Successfully synced ALL ${syncedQuestions.length} solved questions from LeetCode! 🎉`,
+      message,
       syncedCount: syncedQuestions.length,
       totalSubmissions: allSubmissions.length,
       profile: {
         totalSolved: profile.totalSolved,
+        foundSubmissions: profile.foundSubmissions,
         easySolved: profile.easySolved,
         mediumSolved: profile.mediumSolved,
         hardSolved: profile.hardSolved,
+        apiLimitation: profile.apiLimitation
       }
     });
   } catch (error) {
@@ -304,8 +310,25 @@ exports.getLeetCodeQuestions = async (req, res) => {
 
     console.log("📊 Backend: User's solved questions:", user.leetcodeSolvedQuestions?.length || 0);
 
+    // If user has no synced questions, return empty array with helpful message
+    if (!user.leetcodeSolvedQuestions || user.leetcodeSolvedQuestions.length === 0) {
+      console.log("⚠️ Backend: User has no synced LeetCode questions yet");
+      return res.json({
+        questions: [],
+        profile: user.leetcodeProfile || {
+          totalSolved: 0,
+          easySolved: 0,
+          mediumSolved: 0,
+          hardSolved: 0,
+          lastSyncAt: null,
+          ranking: null
+        },
+        message: "No synced questions found. Use 'Sync ALL Data' to import your solved problems from LeetCode."
+      });
+    }
+
     // Format the user's solved questions
-    const formattedQuestions = (user.leetcodeSolvedQuestions || []).map((solvedQ) => {
+    const formattedQuestions = user.leetcodeSolvedQuestions.map((solvedQ) => {
       const questionDetails = solvedQ.leetcodeQuestionId;
       
       return {
@@ -522,10 +545,98 @@ exports.syncMoreLeetCodeData = async (req, res) => {
   }
 };
 
+exports.addManualQuestion = async (req, res) => {
+  try {
+    const { title, titleSlug, difficulty, notes } = req.body;
+
+    const token = req.cookies?.token || req.headers.authorization?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if user already has this question
+    const existingQuestion = currentUser.leetcodeSolvedQuestions.find(
+      q => q.titleSlug === titleSlug || q.title === title
+    );
+
+    if (existingQuestion) {
+      return res.status(400).json({ message: "Question already exists in your list" });
+    }
+
+    // Try to get question details from LeetCode API if titleSlug is provided
+    let questionDetails = null;
+    if (titleSlug) {
+      try {
+        questionDetails = await leetcodeService.getProblemDetails(titleSlug);
+      } catch (error) {
+        console.log("Could not fetch question details from LeetCode API");
+      }
+    }
+
+    // Create or find the question in global collection
+    let question = null;
+    if (questionDetails) {
+      question = await LeetCodeQuestion.findOne({ titleSlug });
+      if (!question) {
+        question = new LeetCodeQuestion({
+          questionId: questionDetails.questionId,
+          frontendQuestionId: questionDetails.questionFrontendId,
+          title: questionDetails.title,
+          titleSlug: questionDetails.titleSlug,
+          content: questionDetails.content,
+          difficulty: questionDetails.difficulty,
+          topicTags: questionDetails.topicTags,
+          categoryTitle: questionDetails.categoryTitle,
+          likes: questionDetails.likes,
+          dislikes: questionDetails.dislikes,
+          sampleTestCase: questionDetails.sampleTestCase,
+          exampleTestcases: questionDetails.exampleTestcases,
+          hints: questionDetails.hints,
+          userSolutions: [],
+        });
+        await question.save();
+      }
+    }
+
+    // Add to user's solved questions
+    currentUser.leetcodeSolvedQuestions.push({
+      leetcodeQuestionId: question?._id,
+      titleSlug: titleSlug || title.toLowerCase().replace(/\s+/g, '-'),
+      title: title,
+      difficulty: difficulty || (questionDetails?.difficulty) || 'Medium',
+      solvedAt: new Date(),
+      submissions: [],
+      notes: notes || "",
+      isFavorite: false,
+    });
+
+    await currentUser.save();
+
+    res.json({
+      success: true,
+      message: `Successfully added "${title}" to your solved questions!`,
+    });
+
+  } catch (error) {
+    console.error("Error adding manual question:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.updateUserSolution = async (req, res) => {
   try {
+    console.log("🎯 updateUserSolution function called");
     const { id } = req.params;
     const { code, language, notes, isSolved } = req.body;
+    console.log("📋 Parameters - ID:", id, "Language:", language, "isSolved:", isSolved);
 
     const token =
       req.cookies?.token || req.headers.authorization?.replace("Bearer ", "");
@@ -536,12 +647,13 @@ exports.updateUserSolution = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    const question = await LeetCodeQuestion.findById(id);
-    if (!question) {
+    const leetcodeQuestion = await LeetCodeQuestion.findById(id);
+    if (!leetcodeQuestion) {
       return res.status(404).json({ message: "Question not found" });
     }
 
-    let userSolution = question.userSolutions.find(
+    // Update the LeetCode question's user solution (keep existing functionality)
+    let userSolution = leetcodeQuestion.userSolutions.find(
       (sol) => sol.userId.toString() === userId
     );
 
@@ -552,7 +664,7 @@ exports.updateUserSolution = async (req, res) => {
         submissions: [],
         notes: "",
       };
-      question.userSolutions.push(userSolution);
+      leetcodeQuestion.userSolutions.push(userSolution);
     }
 
     if (code && language) {
@@ -570,7 +682,9 @@ exports.updateUserSolution = async (req, res) => {
       if (isSolved) userSolution.lastSolvedAt = new Date();
     }
 
-    await question.save();
+    await leetcodeQuestion.save();
+
+
 
     res.json({
       success: true,
@@ -581,6 +695,29 @@ exports.updateUserSolution = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Helper function to calculate streak (same as in questionController)
+function calculateStreak(solvedQuestions) {
+  const dates = solvedQuestions
+    .map((q) => new Date(q.solvedAt).toDateString())
+    .sort((a, b) => new Date(b) - new Date(a));
+
+  const uniqueDates = [...new Set(dates)];
+  let streak = 0;
+  let currentDate = new Date();
+
+  for (const dateStr of uniqueDates) {
+    const date = new Date(dateStr);
+    if (date.toDateString() === currentDate.toDateString()) {
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
 
 exports.getQuestionsCount = async (req, res) => {
   try {

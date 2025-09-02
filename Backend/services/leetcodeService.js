@@ -164,62 +164,74 @@ class LeetCodeService {
       );
       console.log(`📊 User has solved ${totalSolved} problems total`);
 
-      // Get submissions in batches to get ALL solved problems
+      // Try multiple aggressive strategies to get maximum submissions
       const allSubmissions = [];
-      const batchSize = 100; // Maximum allowed by LeetCode API
-      let hasMore = true;
-      let offset = 0;
-
-      while (hasMore && allSubmissions.length < totalSolved) {
+      const seenTitleSlugs = new Set();
+      
+      console.log("🔄 Attempting AGGRESSIVE fetch strategies...");
+      
+      // Strategy 1: Maximum limit attempts
+      const limits = [500, 300, 200, 150, 100];
+      for (const limit of limits) {
         try {
-          console.log(
-            `🔄 Fetching batch ${
-              Math.floor(offset / batchSize) + 1
-            } (offset: ${offset})`
-          );
-
-          const submissions = await this.getUserRecentSubmissions(
-            username,
-            Math.min(batchSize, totalSolved - allSubmissions.length)
-          );
-
-          if (submissions.length === 0) {
-            hasMore = false;
-            break;
+          console.log(`📡 Trying limit ${limit}...`);
+          const submissions = await this.getUserRecentSubmissions(username, limit);
+          let newCount = 0;
+          for (const sub of submissions) {
+            if (!seenTitleSlugs.has(sub.titleSlug)) {
+              allSubmissions.push(sub);
+              seenTitleSlugs.add(sub.titleSlug);
+              newCount++;
+            }
           }
-
-          // Filter out duplicates based on titleSlug
-          const newSubmissions = submissions.filter(
-            (sub) =>
-              !allSubmissions.some(
-                (existing) => existing.titleSlug === sub.titleSlug
-              )
-          );
-
-          allSubmissions.push(...newSubmissions);
-          offset += batchSize;
-
-          // If we got less than requested, we've reached the end
-          if (submissions.length < batchSize) {
-            hasMore = false;
+          console.log(`✅ Limit ${limit}: Added ${newCount} new problems (total: ${allSubmissions.length})`);
+          
+          // If we got a good result, try to get more with a delay
+          if (newCount > 0) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
           }
-
-          // Add delay to respect rate limits
-          await new Promise((resolve) => setTimeout(resolve, 1000));
         } catch (error) {
-          console.error(`❌ Error fetching batch at offset ${offset}:`, error);
-          hasMore = false;
+          console.error(`❌ Limit ${limit} failed:`, error);
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 
+      // Strategy 2: Try different time-based approaches
+      console.log("🔄 Trying time-based strategies...");
+      try {
+        // Sometimes different calls return different subsets
+        for (let i = 0; i < 3; i++) {
+          console.log(`📡 Time-based attempt ${i + 1}...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const submissions = await this.getUserRecentSubmissions(username, 100);
+          let newCount = 0;
+          for (const sub of submissions) {
+            if (!seenTitleSlugs.has(sub.titleSlug)) {
+              allSubmissions.push(sub);
+              seenTitleSlugs.add(sub.titleSlug);
+              newCount++;
+            }
+          }
+          console.log(`✅ Time attempt ${i + 1}: Added ${newCount} new problems`);
+        }
+      } catch (error) {
+        console.error("❌ Time-based strategy failed:", error);
+      }
+
       console.log(
-        `✅ Successfully fetched ${allSubmissions.length} unique solved problems`
+        `✅ Successfully fetched ${allSubmissions.length} unique solved problems out of ${totalSolved} total`
       );
+      
+      if (allSubmissions.length < totalSolved) {
+        console.log(`⚠️ LeetCode API limitation: Only ${allSubmissions.length}/${totalSolved} problems retrieved. The API only returns recent submissions, not all-time solved problems.`);
+      }
 
       return {
         submissions: allSubmissions,
         profile: {
           totalSolved,
+          foundSubmissions: allSubmissions.length,
           easySolved:
             userProfile.submitStats.acSubmissionNum.find(
               (s) => s.difficulty === "Easy"
@@ -233,6 +245,7 @@ class LeetCodeService {
               (s) => s.difficulty === "Hard"
             )?.count || 0,
           ranking: userProfile.profile.ranking,
+          apiLimitation: allSubmissions.length < totalSolved
         },
       };
     } catch (error) {

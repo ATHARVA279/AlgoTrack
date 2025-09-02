@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ExternalLink, Save, CheckCircle2, Circle } from "lucide-react";
@@ -50,11 +50,24 @@ export default function LeetCodeQuestionDetail() {
     { value: "c", label: "C" },
   ];
 
+  const fetchQuestionDetails = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`/api/leetcode/questions/${id}`);
+      setQuestion(response.data);
+    } catch (error) {
+      console.error("Error fetching question details:", error);
+      toast.error("Failed to fetch question details");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       fetchQuestionDetails();
     }
-  }, [id]);
+  }, [id, fetchQuestionDetails]);
 
   useEffect(() => {
     if (question) {
@@ -72,19 +85,6 @@ export default function LeetCodeQuestionDetail() {
       }
     }
   }, [question, selectedLanguage]);
-
-  const fetchQuestionDetails = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`/api/leetcode/questions/${id}`);
-      setQuestion(response.data);
-    } catch (error) {
-      console.error("Error fetching question details:", error);
-      toast.error("Failed to fetch question details");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getDefaultCode = (language: string) => {
     const templates = {
@@ -123,8 +123,12 @@ public:
   const saveSolution = async () => {
     if (!question) return;
 
+    console.log("🎯 Frontend: saveSolution called");
+
     try {
       setSaving(true);
+
+      // First, save to LeetCode question (existing functionality)
       await axios.put(`/api/leetcode/questions/${question._id}/solution`, {
         code: code.trim(),
         language: selectedLanguage,
@@ -132,7 +136,109 @@ public:
         isSolved
       });
 
-      toast.success("Solution saved successfully!");
+      // If marked as solved and has code, also add to manual questions collection
+      if (isSolved && code.trim()) {
+        console.log("🎯 Adding to manual questions collection...");
+        
+        // Extract sample input/output from question content
+        let sampleInput = "Input will be provided";
+        let sampleOutput = "Expected output";
+        
+        if (question.sampleTestCase) {
+          sampleInput = question.sampleTestCase;
+        }
+        
+        // Try to extract from HTML content with better parsing
+        if (question.content) {
+          // Clean the content first to make parsing easier
+          const cleanContent = question.content
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/\s+/g, ' ');
+
+          // Look for Example patterns with Input/Output
+          const examplePattern = /Example\s*\d*:\s*Input:\s*([^O]+?)Output:\s*([^E\n]+?)(?=Example|Explanation|Constraints|$)/gi;
+          const exampleMatch = examplePattern.exec(cleanContent);
+          
+          if (exampleMatch) {
+            sampleInput = exampleMatch[1].trim();
+            sampleOutput = exampleMatch[2].trim();
+          } else {
+            // Fallback: Look for first Input: and Output: patterns
+            const inputMatch = cleanContent.match(/Input:\s*([^O\n]+?)(?=Output|Explanation|$)/i);
+            const outputMatch = cleanContent.match(/Output:\s*([^E\n]+?)(?=Explanation|Example|Constraints|$)/i);
+            
+            if (inputMatch) sampleInput = inputMatch[1].trim();
+            if (outputMatch) sampleOutput = outputMatch[1].trim();
+          }
+          
+          // Clean up the extracted values
+          sampleInput = sampleInput.replace(/^\s*s\s*=\s*/, '').trim();
+          sampleOutput = sampleOutput.replace(/^\s*(true|false)\s*/, '$1').trim();
+        }
+
+        // Clean description from HTML and remove examples section
+        let description = question.content
+          .replace(/<[^>]*>/g, '')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&amp;/g, '&')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // Remove examples section since we extract them separately
+        description = description.replace(/Example\s*\d*:[\s\S]*?(?=Constraints:|$)/gi, '').trim();
+        
+        // Remove constraints section to keep description clean
+        description = description.replace(/Constraints:[\s\S]*$/gi, '').trim();
+
+        // Prepare data in the same format as AddQuestion.tsx
+        const questionData = {
+          title: question.title,
+          description: description || `${question.title}\n\nLeetCode problem #${question.frontendQuestionId}`,
+          difficulty: question.difficulty,
+          topic: question.topicTags[0]?.name || "Algorithms",
+          sampleInput: sampleInput,
+          sampleOutput: sampleOutput,
+          solution: {
+            language: selectedLanguage,
+            code: code.trim(),
+            explanation: notes.trim() || `Solution for ${question.title}`
+          }
+        };
+
+        console.log("📋 Question data being sent:", {
+          title: questionData.title,
+          difficulty: questionData.difficulty,
+          topic: questionData.topic,
+          sampleInput: questionData.sampleInput,
+          sampleOutput: questionData.sampleOutput,
+          descriptionLength: questionData.description.length
+        });
+
+        // Use the same API call as AddQuestion.tsx
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(questionData),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to add to questions collection");
+        }
+
+        toast.success("🎉 Solution saved and added to your Questions collection!");
+      } else {
+        toast.success("Solution saved successfully!");
+      }
+      
       await fetchQuestionDetails();
     } catch (error) {
       console.error("Error saving solution:", error);
@@ -314,7 +420,7 @@ public:
 
           <button
             onClick={saveSolution}
-            disabled={saving}
+            disabled={saving || !code.trim()}
             className="cyber-button w-full flex items-center justify-center space-x-2"
           >
             {saving ? (
@@ -325,10 +431,19 @@ public:
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                <span>Save Solution</span>
+                <span>{isSolved && code.trim() ? "Save & Add to Collection" : "Save Solution"}</span>
               </>
             )}
           </button>
+
+          {isSolved && code.trim() && (
+            <div className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <p className="text-sm text-green-400 flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>This solution will be added to your Questions collection for easy access!</span>
+              </p>
+            </div>
+          )}
 
           {question.userSolution.submissions.length > 0 && (
             <div className="mt-6">

@@ -15,16 +15,9 @@ axiosInstance.interceptors.request.use(
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    console.log(
-      `Making ${config.method?.toUpperCase()} request to: ${config.baseURL}${
-        config.url
-      }`
-    );
     return config;
   },
   (error) => {
-    console.error("Request error:", error);
     return Promise.reject(error);
   }
 );
@@ -34,10 +27,6 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.code === "ERR_NETWORK") {
-      console.error("Network error - check if backend is running on", baseURL);
-    }
-    console.error("Response error:", error.response?.data || error.message);
     return Promise.reject(error);
   }
 );

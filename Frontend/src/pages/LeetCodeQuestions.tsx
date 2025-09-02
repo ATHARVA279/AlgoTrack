@@ -41,11 +41,6 @@ export default function LeetCodeQuestions() {
   const [syncing, setSyncing] = useState(false);
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
   const [showSyncModal, setShowSyncModal] = useState(false);
-  const [questionsCount, setQuestionsCount] = useState({
-    total: 0,
-    solved: 0,
-    remaining: 0,
-  });
   const [leetcodeProfile, setLeetcodeProfile] = useState({
     totalSolved: 0,
     easySolved: 0,
@@ -55,15 +50,7 @@ export default function LeetCodeQuestions() {
     ranking: null,
   });
 
-  const fetchQuestionsCount = useCallback(async () => {
-    try {
-      const response = await axios.get("/api/leetcode/questions/count");
-      setQuestionsCount(response.data);
-      console.log("📊 Questions count:", response.data);
-    } catch (error) {
-      console.error("❌ Error fetching questions count:", error);
-    }
-  }, []);
+
 
   const fetchLeetCodeQuestions = useCallback(async () => {
     try {
@@ -72,27 +59,32 @@ export default function LeetCodeQuestions() {
       const response = await axios.get("/api/leetcode/questions");
       console.log("✅ LeetCode questions response:", response.data);
 
-      if (response.data.questions) {
+      if (response.data.questions !== undefined) {
         console.log(
           "📊 Number of questions received:",
           response.data.questions.length
         );
         setQuestions(response.data.questions);
         setLeetcodeProfile(response.data.profile);
+
+        // Show message if no questions are synced yet
+        if (response.data.questions.length === 0 && response.data.message) {
+          toast(response.data.message);
+        }
       } else {
         // Fallback for old API format
         console.log("📊 Number of questions received:", response.data.length);
         setQuestions(response.data);
       }
 
-      await fetchQuestionsCount();
+
     } catch (error) {
       console.error("❌ Error fetching LeetCode questions:", error);
       toast.error("Failed to fetch LeetCode questions");
     } finally {
       setLoading(false);
     }
-  }, [fetchQuestionsCount]);
+  }, []);
 
   const filterQuestions = useCallback(() => {
     console.log("🔍 Filtering questions...");
@@ -187,7 +179,7 @@ export default function LeetCodeQuestions() {
           typeof error.response === "object" &&
           "data" in error.response
         ) {
-          const responseData = error.response.data as any;
+          const responseData = error.response.data as unknown;
           errorMessage = responseData?.message || errorMessage;
         }
       }
@@ -197,6 +189,8 @@ export default function LeetCodeQuestions() {
       setSyncing(false);
     }
   };
+
+
 
   const difficultyColors = {
     Easy: "text-green-400 bg-green-400/10",
@@ -262,6 +256,8 @@ export default function LeetCodeQuestions() {
 
   return (
     <div className="space-y-6">
+
+
       {/* Sync Modal */}
       {showSyncModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -331,9 +327,9 @@ export default function LeetCodeQuestions() {
           <div>
             <h2 className="text-2xl font-bold">LeetCode Questions</h2>
             <p className="text-gray-400">
-              {questions.length} solved questions • Easy:{" "}
-              {leetcodeProfile.easySolved} • Medium:{" "}
-              {leetcodeProfile.mediumSolved} • Hard:{" "}
+              {questions.length} synced questions • Total solved:{" "}
+              {leetcodeProfile.totalSolved} • Easy: {leetcodeProfile.easySolved}{" "}
+              • Medium: {leetcodeProfile.mediumSolved} • Hard:{" "}
               {leetcodeProfile.hardSolved}
               {leetcodeProfile.lastSyncAt && (
                 <span>
@@ -343,6 +339,7 @@ export default function LeetCodeQuestions() {
                 </span>
               )}
             </p>
+
           </div>
 
           <div className="flex space-x-2">
@@ -365,6 +362,7 @@ export default function LeetCodeQuestions() {
                 ? "Load Sample Questions"
                 : "Add More Questions"}
             </button>
+
             <button
               onClick={() => setShowSyncModal(true)}
               className="cyber-button flex items-center space-x-2"
@@ -506,18 +504,26 @@ export default function LeetCodeQuestions() {
 
         {filteredQuestions.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-400 text-lg">
+            <p className="text-gray-400 text-lg mb-4">
               {questions.length === 0
-                ? "No solved LeetCode questions found. Use 'Sync ALL Data' to import all your solved problems!"
+                ? "No LeetCode questions synced yet!"
                 : "No questions match your filters."}
             </p>
             {questions.length === 0 && (
-              <button
-                onClick={() => setShowSyncModal(true)}
-                className="cyber-button mt-4"
-              >
-                Import Your Solved Questions
-              </button>
+              <div className="space-y-4">
+                <p className="text-gray-500">
+                  Your LeetCode profile shows {leetcodeProfile.totalSolved}{" "}
+                  solved problems.
+                  <br />
+                  Use "Sync LeetCode" to import recent ones, or go to "Questions" → "Add Question" for older ones!
+                </p>
+                <button
+                  onClick={() => setShowSyncModal(true)}
+                  className="cyber-button bg-neon-purple/20 border-neon-purple"
+                >
+                  🚀 Sync Recent Questions
+                </button>
+              </div>
             )}
           </div>
         )}
