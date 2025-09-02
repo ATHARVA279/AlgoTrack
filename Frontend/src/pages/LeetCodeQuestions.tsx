@@ -34,6 +34,12 @@ export default function LeetCodeQuestions() {
   const [showSyncModal, setShowSyncModal] = useState(false);
 
   const filterQuestions = useCallback(() => {
+    console.log("🔍 Filtering questions...");
+    console.log("📝 Total questions:", questions.length);
+    console.log("🔎 Search query:", searchQuery);
+    console.log("📊 Selected difficulty:", selectedDifficulty);
+    console.log("✅ Show solved only:", showSolvedOnly);
+    
     let filtered = questions;
 
     if (searchQuery) {
@@ -51,10 +57,13 @@ export default function LeetCodeQuestions() {
       filtered = filtered.filter(q => q.isSolved);
     }
 
+    console.log("📋 Filtered questions count:", filtered.length);
     setFilteredQuestions(filtered);
   }, [searchQuery, selectedDifficulty, showSolvedOnly, questions]);
 
   useEffect(() => {
+    console.log("👤 Frontend: Current user:", user);
+    console.log("🔗 Frontend: User LeetCode username:", user?.leetcodeUsername);
     fetchLeetCodeQuestions();
     if (user?.leetcodeUsername) {
       setLeetcodeUsername(user.leetcodeUsername);
@@ -67,11 +76,14 @@ export default function LeetCodeQuestions() {
 
   const fetchLeetCodeQuestions = async () => {
     try {
+      console.log("🔄 Fetching LeetCode questions...");
       setLoading(true);
       const response = await axios.get("/api/leetcode/questions");
+      console.log("✅ LeetCode questions response:", response.data);
+      console.log("📊 Number of questions received:", response.data.length);
       setQuestions(response.data);
     } catch (error) {
-      console.error("Error fetching LeetCode questions:", error);
+      console.error("❌ Error fetching LeetCode questions:", error);
       toast.error("Failed to fetch LeetCode questions");
     } finally {
       setLoading(false);

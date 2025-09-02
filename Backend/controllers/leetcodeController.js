@@ -111,17 +111,27 @@ exports.syncLeetCodeData = async (req, res) => {
 
 exports.getLeetCodeQuestions = async (req, res) => {
   try {
+    console.log("🔄 Backend: Fetching LeetCode questions...");
+    
     const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
+      console.log("❌ Backend: No token provided");
       return res.status(401).json({ message: "Unauthorized" });
     }
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
+    console.log("👤 Backend: User ID:", userId);
+
+    // Check total questions in database
+    const totalQuestions = await LeetCodeQuestion.countDocuments();
+    console.log("📊 Backend: Total questions in DB:", totalQuestions);
 
     const questions = await LeetCodeQuestion.find({
       "userSolutions.userId": userId
     }).sort({ "userSolutions.lastSolvedAt": -1 });
+
+    console.log("📊 Backend: Found user questions in DB:", questions.length);
 
     const formattedQuestions = questions.map(question => {
       const userSolution = question.userSolutions.find(sol => sol.userId.toString() === userId);
@@ -142,10 +152,13 @@ exports.getLeetCodeQuestions = async (req, res) => {
       };
     });
 
+    console.log("✅ Backend: Returning formatted questions:", formattedQuestions.length);
+    console.log("📋 Backend: Sample question:", formattedQuestions[0] || "No questions found");
+    
     res.json(formattedQuestions);
 
   } catch (error) {
-    console.error("Error fetching LeetCode questions:", error);
+    console.error("❌ Backend: Error fetching LeetCode questions:", error);
     res.status(500).json({ message: error.message });
   }
 };
