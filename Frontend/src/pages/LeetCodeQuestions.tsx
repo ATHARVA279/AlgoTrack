@@ -112,19 +112,32 @@ export default function LeetCodeQuestions() {
 
     try {
       setSyncing(true);
+      console.log("🔄 Starting LeetCode sync for:", usernameToSync);
+      
+      // Increase timeout for sync request to 60 seconds
       const response = await axios.post("/api/leetcode/sync", {
         leetcodeUsername: usernameToSync,
+      }, {
+        timeout: 60000, // 60 seconds
+        withCredentials: true
       });
 
+      console.log("✅ Sync completed:", response.data);
       toast.success(response.data.message);
       setShowSyncModal(false);
       await fetchLeetCodeQuestions();
     } catch (error: unknown) {
-      console.error("Error syncing LeetCode data:", error);
-      const errorMessage =
-        error instanceof Error && "response" in error
-          ? (error as unknown).response?.data?.message
-          : "Failed to sync LeetCode data";
+      console.error("❌ Error syncing LeetCode data:", error);
+      
+      let errorMessage = "Failed to sync LeetCode data";
+      if (error && typeof error === 'object' && 'code' in error) {
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = "Sync is taking longer than expected. Please try again or check your LeetCode username.";
+        } else if ('response' in error && error.response && typeof error.response === 'object' && 'data' in error.response) {
+          errorMessage = (error.response.data as unknown)?.message || errorMessage;
+        }
+      }
+      
       toast.error(errorMessage);
     } finally {
       setSyncing(false);
@@ -171,7 +184,7 @@ export default function LeetCodeQuestions() {
                 {syncing ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Syncing...</span>
+                    <span>Syncing... (This may take up to 60 seconds)</span>
                   </>
                 ) : (
                   <span>Sync Data</span>
