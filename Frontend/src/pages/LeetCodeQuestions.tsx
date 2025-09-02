@@ -41,8 +41,58 @@ export default function LeetCodeQuestions() {
   const [syncing, setSyncing] = useState(false);
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
   const [showSyncModal, setShowSyncModal] = useState(false);
-  const [questionsCount, setQuestionsCount] = useState({ total: 0, solved: 0, remaining: 0 });
-  const [leetcodeProfile, setLeetcodeProfile] = useState({ totalSolved: 0, easySolved: 0, mediumSolved: 0, hardSolved: 0, lastSyncAt: null, ranking: null });
+  const [questionsCount, setQuestionsCount] = useState({
+    total: 0,
+    solved: 0,
+    remaining: 0,
+  });
+  const [leetcodeProfile, setLeetcodeProfile] = useState({
+    totalSolved: 0,
+    easySolved: 0,
+    mediumSolved: 0,
+    hardSolved: 0,
+    lastSyncAt: null,
+    ranking: null,
+  });
+
+  const fetchQuestionsCount = useCallback(async () => {
+    try {
+      const response = await axios.get("/api/leetcode/questions/count");
+      setQuestionsCount(response.data);
+      console.log("📊 Questions count:", response.data);
+    } catch (error) {
+      console.error("❌ Error fetching questions count:", error);
+    }
+  }, []);
+
+  const fetchLeetCodeQuestions = useCallback(async () => {
+    try {
+      console.log("🔄 Fetching user's solved LeetCode questions...");
+      setLoading(true);
+      const response = await axios.get("/api/leetcode/questions");
+      console.log("✅ LeetCode questions response:", response.data);
+
+      if (response.data.questions) {
+        console.log(
+          "📊 Number of questions received:",
+          response.data.questions.length
+        );
+        setQuestions(response.data.questions);
+        setLeetcodeProfile(response.data.profile);
+      } else {
+        // Fallback for old API format
+        console.log("📊 Number of questions received:", response.data.length);
+        setQuestions(response.data);
+      }
+
+      await fetchQuestionsCount();
+    } catch (error) {
+      console.error("❌ Error fetching LeetCode questions:", error);
+      toast.error("Failed to fetch LeetCode questions");
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchQuestionsCount]);
 
   const filterQuestions = useCallback(() => {
     console.log("🔍 Filtering questions...");
@@ -88,42 +138,6 @@ export default function LeetCodeQuestions() {
     filterQuestions();
   }, [filterQuestions]);
 
-  const fetchQuestionsCount = async () => {
-    try {
-      const response = await axios.get("/api/leetcode/questions/count");
-      setQuestionsCount(response.data);
-      console.log("📊 Questions count:", response.data);
-    } catch (error) {
-      console.error("❌ Error fetching questions count:", error);
-    }
-  };
-
-  const fetchLeetCodeQuestions = async () => {
-    try {
-      console.log("🔄 Fetching user's solved LeetCode questions...");
-      setLoading(true);
-      const response = await axios.get("/api/leetcode/questions");
-      console.log("✅ LeetCode questions response:", response.data);
-      
-      if (response.data.questions) {
-        console.log("📊 Number of questions received:", response.data.questions.length);
-        setQuestions(response.data.questions);
-        setLeetcodeProfile(response.data.profile);
-      } else {
-        // Fallback for old API format
-        console.log("📊 Number of questions received:", response.data.length);
-        setQuestions(response.data);
-      }
-      
-      await fetchQuestionsCount();
-    } catch (error) {
-      console.error("❌ Error fetching LeetCode questions:", error);
-      toast.error("Failed to fetch LeetCode questions");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const syncLeetCodeData = async (syncAll = false) => {
     const usernameToSync = leetcodeUsername.trim() || user?.leetcodeUsername;
 
@@ -135,19 +149,25 @@ export default function LeetCodeQuestions() {
     try {
       setSyncing(true);
       const syncType = syncAll ? "comprehensive" : "quick";
-      const endpoint = syncAll ? "/api/leetcode/sync-all" : "/api/leetcode/sync";
-      
+      const endpoint = syncAll
+        ? "/api/leetcode/sync-all"
+        : "/api/leetcode/sync";
+
       console.log(`🔄 Starting ${syncType} LeetCode sync for:`, usernameToSync);
-      
+
       // Increase timeout for comprehensive sync
       const timeout = syncAll ? 300000 : 60000; // 5 minutes for full sync, 1 minute for quick
-      
-      const response = await axios.post(endpoint, {
-        leetcodeUsername: usernameToSync,
-      }, {
-        timeout,
-        withCredentials: true
-      });
+
+      const response = await axios.post(
+        endpoint,
+        {
+          leetcodeUsername: usernameToSync,
+        },
+        {
+          timeout,
+          withCredentials: true,
+        }
+      );
 
       console.log("✅ Sync completed:", response.data);
       toast.success(response.data.message);
@@ -155,17 +175,23 @@ export default function LeetCodeQuestions() {
       await fetchLeetCodeQuestions();
     } catch (error: unknown) {
       console.error("❌ Error syncing LeetCode data:", error);
-      
+
       let errorMessage = "Failed to sync LeetCode data";
-      if (error && typeof error === 'object' && 'code' in error) {
-        if (error.code === 'ECONNABORTED') {
-          errorMessage = "Sync is taking longer than expected. This is normal for comprehensive sync. Please try again.";
-        } else if ('response' in error && error.response && typeof error.response === 'object' && 'data' in error.response) {
+      if (error && typeof error === "object" && "code" in error) {
+        if (error.code === "ECONNABORTED") {
+          errorMessage =
+            "Sync is taking longer than expected. This is normal for comprehensive sync. Please try again.";
+        } else if (
+          "response" in error &&
+          error.response &&
+          typeof error.response === "object" &&
+          "data" in error.response
+        ) {
           const responseData = error.response.data as any;
           errorMessage = responseData?.message || errorMessage;
         }
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setSyncing(false);
@@ -190,7 +216,7 @@ export default function LeetCodeQuestions() {
             </div>
             <div className="h-10 bg-gray-700 rounded w-32"></div>
           </div>
-          
+
           {/* Loading Filters */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-4 md:space-y-0 md:space-x-4">
             <div className="h-10 bg-gray-700 rounded flex-1"></div>
@@ -223,7 +249,7 @@ export default function LeetCodeQuestions() {
             </div>
           ))}
         </div>
-        
+
         <div className="text-center py-4">
           <div className="inline-flex items-center space-x-2 text-gray-400">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-neon-purple"></div>
@@ -305,9 +331,16 @@ export default function LeetCodeQuestions() {
           <div>
             <h2 className="text-2xl font-bold">LeetCode Questions</h2>
             <p className="text-gray-400">
-              {questions.length} solved questions • Easy: {leetcodeProfile.easySolved} • Medium: {leetcodeProfile.mediumSolved} • Hard: {leetcodeProfile.hardSolved}
+              {questions.length} solved questions • Easy:{" "}
+              {leetcodeProfile.easySolved} • Medium:{" "}
+              {leetcodeProfile.mediumSolved} • Hard:{" "}
+              {leetcodeProfile.hardSolved}
               {leetcodeProfile.lastSyncAt && (
-                <span> • Last sync: {new Date(leetcodeProfile.lastSyncAt).toLocaleDateString()}</span>
+                <span>
+                  {" "}
+                  • Last sync:{" "}
+                  {new Date(leetcodeProfile.lastSyncAt).toLocaleDateString()}
+                </span>
               )}
             </p>
           </div>
@@ -328,7 +361,9 @@ export default function LeetCodeQuestions() {
               }}
               className="cyber-button"
             >
-              {questions.length === 0 ? "Load Sample Questions" : "Add More Questions"}
+              {questions.length === 0
+                ? "Load Sample Questions"
+                : "Add More Questions"}
             </button>
             <button
               onClick={() => setShowSyncModal(true)}
