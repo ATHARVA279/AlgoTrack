@@ -12,6 +12,33 @@ const UserSchema = new mongoose.Schema({
       solvedAt: { type: Date, default: Date.now },
     },
   ],
+  // LeetCode specific tracking
+  leetcodeProfile: {
+    totalSolved: { type: Number, default: 0 },
+    easySolved: { type: Number, default: 0 },
+    mediumSolved: { type: Number, default: 0 },
+    hardSolved: { type: Number, default: 0 },
+    lastSyncAt: { type: Date },
+    ranking: { type: Number },
+  },
+  leetcodeSolvedQuestions: [
+    {
+      leetcodeQuestionId: { type: mongoose.Schema.Types.ObjectId, ref: "LeetCodeQuestion" },
+      titleSlug: { type: String, required: true },
+      title: { type: String, required: true },
+      difficulty: { type: String, enum: ["Easy", "Medium", "Hard"] },
+      solvedAt: { type: Date },
+      submissions: [{
+        submissionId: String,
+        lang: String,
+        timestamp: Date,
+        statusDisplay: String,
+        code: String, // Store user's solution code
+      }],
+      notes: { type: String, default: "" },
+      isFavorite: { type: Boolean, default: false },
+    }
+  ],
   streak: { type: Number, default: 0 },
 });
 

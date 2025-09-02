@@ -3,9 +3,9 @@ const User = require("../models/User");
 const leetcodeService = require("../services/leetcodeService");
 const jwt = require("jsonwebtoken");
 
-exports.syncLeetCodeData = async (req, res) => {
+exports.syncAllLeetCodeData = async (req, res) => {
   try {
-    console.log("🔄 Backend: Starting LeetCode sync...");
+    console.log("🔄 Backend: Starting COMPREHENSIVE LeetCode sync...");
     let { leetcodeUsername } = req.body;
 
     const token =
@@ -17,7 +17,7 @@ exports.syncLeetCodeData = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
-    console.log("👤 Backend: Syncing for user ID:", userId);
+    console.log("👤 Backend: Syncing ALL data for user ID:", userId);
 
     const currentUser = await User.findById(userId);
     if (!currentUser) {
@@ -34,29 +34,38 @@ exports.syncLeetCodeData = async (req, res) => {
 
     console.log("🔗 Backend: LeetCode username:", leetcodeUsername);
 
-    // Get more submissions but process them efficiently
-    const limit = req.body.limit || 50; // Allow custom limit, default to 50
-    const recentSubmissions = await leetcodeService.getUserRecentSubmissions(
-      leetcodeUsername,
-      limit
-    );
-    console.log("📊 Backend: Found submissions:", recentSubmissions.length);
+    // Get ALL solved problems, not just recent ones
+    const { submissions: allSubmissions, profile } = await leetcodeService.getAllUserSolvedProblems(leetcodeUsername);
+    console.log("📊 Backend: Found ALL submissions:", allSubmissions.length);
 
-    if (recentSubmissions.length === 0) {
+    if (allSubmissions.length === 0) {
       return res.status(400).json({
         message:
-          "No recent submissions found. Please check your LeetCode username or make sure you have solved some problems recently.",
+          "No solved problems found. Please check your LeetCode username or make sure you have solved some problems.",
       });
     }
+
+    // Update user's LeetCode profile data
+    currentUser.leetcodeProfile = {
+      totalSolved: profile.totalSolved,
+      easySolved: profile.easySolved,
+      mediumSolved: profile.mediumSolved,
+      hardSolved: profile.hardSolved,
+      lastSyncAt: new Date(),
+      ranking: profile.ranking
+    };
+
+    // Clear existing LeetCode solved questions to avoid duplicates
+    currentUser.leetcodeSolvedQuestions = [];
 
     const syncedQuestions = [];
     let processedCount = 0;
 
-    for (const submission of recentSubmissions) {
+    for (const submission of allSubmissions) {
       try {
         processedCount++;
         console.log(
-          `🔄 Backend: Processing ${processedCount}/${recentSubmissions.length}: ${submission.titleSlug}`
+          `🔄 Backend: Processing ${processedCount}/${allSubmissions.length}: ${submission.titleSlug}`
         );
 
         const problemDetails = await leetcodeService.getProblemDetails(
@@ -70,6 +79,7 @@ exports.syncLeetCodeData = async (req, res) => {
           continue;
         }
 
+        // Store in global LeetCode questions collection
         let question = await LeetCodeQuestion.findOne({
           titleSlug: submission.titleSlug,
         });
@@ -91,42 +101,30 @@ exports.syncLeetCodeData = async (req, res) => {
             hints: problemDetails.hints,
             userSolutions: [],
           });
+          await question.save();
         }
 
-        let userSolution = question.userSolutions.find(
-          (sol) => sol.userId.toString() === userId
-        );
-
-        if (!userSolution) {
-          userSolution = {
-            userId: userId,
-            isSolved: true,
-            submissions: [],
-            lastSolvedAt: new Date(submission.timestamp * 1000),
-          };
-          question.userSolutions.push(userSolution);
-        } else {
-          userSolution.isSolved = true;
-          userSolution.lastSolvedAt = new Date(submission.timestamp * 1000);
-        }
-
-        const existingSubmission = userSolution.submissions.find(
-          (sub) => sub.submissionId === submission.id
-        );
-        if (!existingSubmission) {
-          userSolution.submissions.push({
+        // Add to user's personal solved questions list
+        currentUser.leetcodeSolvedQuestions.push({
+          leetcodeQuestionId: question._id,
+          titleSlug: submission.titleSlug,
+          title: submission.title,
+          difficulty: problemDetails.difficulty,
+          solvedAt: new Date(submission.timestamp * 1000),
+          submissions: [{
             submissionId: submission.id,
             lang: submission.lang,
             timestamp: new Date(submission.timestamp * 1000),
             statusDisplay: submission.statusDisplay,
-          });
-        }
+          }],
+          notes: "",
+          isFavorite: false,
+        });
 
-        await question.save();
         syncedQuestions.push(question);
 
         // Reduce delay to speed up the process
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(
           `❌ Backend: Error processing submission ${submission.titleSlug}:`,
@@ -136,37 +134,153 @@ exports.syncLeetCodeData = async (req, res) => {
       }
     }
 
-    // Update user's LeetCode username
-    await User.findByIdAndUpdate(userId, { leetcodeUsername });
-    console.log("✅ Backend: Updated user LeetCode username");
+    // Update user's LeetCode username and save all data
+    currentUser.leetcodeUsername = leetcodeUsername;
+    await currentUser.save();
+    console.log("✅ Backend: Updated user LeetCode data");
 
     console.log(
-      `✅ Backend: Sync completed. Synced ${syncedQuestions.length} questions`
+      `✅ Backend: COMPREHENSIVE sync completed. Synced ${syncedQuestions.length} questions`
     );
 
     res.json({
       success: true,
-      message: `Successfully synced ${syncedQuestions.length} questions from LeetCode`,
+      message: `Successfully synced ALL ${syncedQuestions.length} solved questions from LeetCode! 🎉`,
       syncedCount: syncedQuestions.length,
-      totalSubmissions: recentSubmissions.length,
+      totalSubmissions: allSubmissions.length,
+      profile: {
+        totalSolved: profile.totalSolved,
+        easySolved: profile.easySolved,
+        mediumSolved: profile.mediumSolved,
+        hardSolved: profile.hardSolved,
+      }
     });
   } catch (error) {
-    console.error("❌ Backend: Error syncing LeetCode data:", error);
+    console.error("❌ Backend: Error syncing ALL LeetCode data:", error);
 
-    let errorMessage = "Failed to sync LeetCode data";
+    let errorMessage = "Failed to sync all LeetCode data";
     if (error.message.includes("User not found")) {
       errorMessage = "LeetCode username not found. Please check your username.";
     } else if (error.message.includes("timeout")) {
-      errorMessage = "Request timed out. Please try again.";
+      errorMessage = "Request timed out. This is normal for comprehensive sync. Please try again.";
     }
 
     res.status(500).json({ message: errorMessage });
   }
 };
 
+// Keep the original sync function for quick syncs
+exports.syncLeetCodeData = async (req, res) => {
+  try {
+    console.log("🔄 Backend: Starting quick LeetCode sync...");
+    let { leetcodeUsername } = req.body;
+
+    const token =
+      req.cookies?.token || req.headers.authorization?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!leetcodeUsername && currentUser.leetcodeUsername) {
+      leetcodeUsername = currentUser.leetcodeUsername;
+    }
+
+    if (!leetcodeUsername) {
+      return res.status(400).json({ message: "LeetCode username is required" });
+    }
+
+    // Quick sync - just recent submissions
+    const recentSubmissions = await leetcodeService.getUserRecentSubmissions(leetcodeUsername, 50);
+    
+    if (recentSubmissions.length === 0) {
+      return res.status(400).json({
+        message: "No recent submissions found. Try the 'Sync All Data' option for comprehensive sync.",
+      });
+    }
+
+    let syncedCount = 0;
+    for (const submission of recentSubmissions) {
+      try {
+        // Check if user already has this question
+        const existingQuestion = currentUser.leetcodeSolvedQuestions.find(
+          q => q.titleSlug === submission.titleSlug
+        );
+
+        if (!existingQuestion) {
+          const problemDetails = await leetcodeService.getProblemDetails(submission.titleSlug);
+          if (problemDetails) {
+            let question = await LeetCodeQuestion.findOne({ titleSlug: submission.titleSlug });
+            if (!question) {
+              question = new LeetCodeQuestion({
+                questionId: problemDetails.questionId,
+                frontendQuestionId: problemDetails.questionFrontendId,
+                title: problemDetails.title,
+                titleSlug: problemDetails.titleSlug,
+                content: problemDetails.content,
+                difficulty: problemDetails.difficulty,
+                topicTags: problemDetails.topicTags,
+                categoryTitle: problemDetails.categoryTitle,
+                likes: problemDetails.likes,
+                dislikes: problemDetails.dislikes,
+                sampleTestCase: problemDetails.sampleTestCase,
+                exampleTestcases: problemDetails.exampleTestcases,
+                hints: problemDetails.hints,
+                userSolutions: [],
+              });
+              await question.save();
+            }
+
+            currentUser.leetcodeSolvedQuestions.push({
+              leetcodeQuestionId: question._id,
+              titleSlug: submission.titleSlug,
+              title: submission.title,
+              difficulty: problemDetails.difficulty,
+              solvedAt: new Date(submission.timestamp * 1000),
+              submissions: [{
+                submissionId: submission.id,
+                lang: submission.lang,
+                timestamp: new Date(submission.timestamp * 1000),
+                statusDisplay: submission.statusDisplay,
+              }],
+              notes: "",
+              isFavorite: false,
+            });
+            syncedCount++;
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Error processing ${submission.titleSlug}:`, error);
+      }
+    }
+
+    currentUser.leetcodeUsername = leetcodeUsername;
+    await currentUser.save();
+
+    res.json({
+      success: true,
+      message: `Quick sync completed! Added ${syncedCount} new questions. Use 'Sync All Data' for comprehensive sync.`,
+      syncedCount,
+      totalSubmissions: recentSubmissions.length,
+    });
+
+  } catch (error) {
+    console.error("❌ Backend: Error in quick sync:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getLeetCodeQuestions = async (req, res) => {
   try {
-    console.log("🔄 Backend: Fetching ALL LeetCode questions...");
+    console.log("🔄 Backend: Fetching user's LeetCode solved questions...");
 
     const token =
       req.cookies?.token || req.headers.authorization?.replace("Bearer ", "");
@@ -179,41 +293,62 @@ exports.getLeetCodeQuestions = async (req, res) => {
     const userId = decoded.id;
     console.log("👤 Backend: User ID:", userId);
 
-    // Get ALL questions from database with NO LIMIT
-    const allQuestions = await LeetCodeQuestion.find({})
-      .sort({ frontendQuestionId: 1 }) // Sort by question number
-      .lean(); // Use lean() for better performance
+    // Get user with their solved LeetCode questions
+    const user = await User.findById(userId)
+      .populate('leetcodeSolvedQuestions.leetcodeQuestionId')
+      .lean();
 
-    console.log("📊 Backend: Total questions in DB:", allQuestions.length);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    const formattedQuestions = allQuestions.map((question) => {
-      const userSolution = question.userSolutions.find(
-        (sol) => sol.userId.toString() === userId
-      );
+    console.log("📊 Backend: User's solved questions:", user.leetcodeSolvedQuestions?.length || 0);
 
+    // Format the user's solved questions
+    const formattedQuestions = (user.leetcodeSolvedQuestions || []).map((solvedQ) => {
+      const questionDetails = solvedQ.leetcodeQuestionId;
+      
       return {
-        _id: question._id,
-        questionId: question.questionId,
-        frontendQuestionId: question.frontendQuestionId,
-        title: question.title,
-        titleSlug: question.titleSlug,
-        difficulty: question.difficulty,
-        topicTags: question.topicTags,
-        categoryTitle: question.categoryTitle,
-        isSolved: userSolution?.isSolved || false,
-        lastSolvedAt: userSolution?.lastSolvedAt,
-        submissionCount: userSolution?.submissions?.length || 0,
-        notes: userSolution?.notes || "",
+        _id: questionDetails?._id || solvedQ.leetcodeQuestionId,
+        questionId: questionDetails?.questionId,
+        frontendQuestionId: questionDetails?.frontendQuestionId,
+        title: solvedQ.title,
+        titleSlug: solvedQ.titleSlug,
+        difficulty: solvedQ.difficulty,
+        topicTags: questionDetails?.topicTags || [],
+        categoryTitle: questionDetails?.categoryTitle || "Algorithms",
+        isSolved: true, // All questions in this list are solved
+        lastSolvedAt: solvedQ.solvedAt,
+        submissionCount: solvedQ.submissions?.length || 0,
+        notes: solvedQ.notes || "",
+        isFavorite: solvedQ.isFavorite || false,
+        content: questionDetails?.content,
+        hints: questionDetails?.hints || [],
       };
     });
 
-    const solvedCount = formattedQuestions.filter(q => q.isSolved).length;
+    // Sort by question number if available, otherwise by solved date
+    formattedQuestions.sort((a, b) => {
+      if (a.frontendQuestionId && b.frontendQuestionId) {
+        return parseInt(a.frontendQuestionId) - parseInt(b.frontendQuestionId);
+      }
+      return new Date(b.lastSolvedAt) - new Date(a.lastSolvedAt);
+    });
 
-    console.log("✅ Backend: Returning all questions:", formattedQuestions.length);
-    console.log("🎯 Backend: User solved:", solvedCount);
-    console.log("📋 Backend: Sample question:", formattedQuestions[0] || "No questions found");
+    console.log("✅ Backend: Returning user's solved questions:", formattedQuestions.length);
+    console.log("📊 Backend: Profile stats:", user.leetcodeProfile);
 
-    res.json(formattedQuestions);
+    res.json({
+      questions: formattedQuestions,
+      profile: user.leetcodeProfile || {
+        totalSolved: formattedQuestions.length,
+        easySolved: formattedQuestions.filter(q => q.difficulty === 'Easy').length,
+        mediumSolved: formattedQuestions.filter(q => q.difficulty === 'Medium').length,
+        hardSolved: formattedQuestions.filter(q => q.difficulty === 'Hard').length,
+        lastSyncAt: null,
+        ranking: null
+      }
+    });
   } catch (error) {
     console.error("❌ Backend: Error fetching LeetCode questions:", error);
     res.status(500).json({ message: error.message });
@@ -478,7 +613,7 @@ exports.getQuestionsCount = async (req, res) => {
 
 exports.populatePopularQuestions = async (req, res) => {
   try {
-    console.log("🔄 Backend: Populating popular LeetCode questions...");
+    console.log("🔄 Backend: Populating comprehensive LeetCode questions...");
     
     const popularQuestions = [
       {
@@ -816,6 +951,412 @@ exports.populatePopularQuestions = async (req, res) => {
         dislikes: 250,
         hints: [],
         userSolutions: []
+      },
+      // Add more comprehensive questions
+      {
+        questionId: "15",
+        frontendQuestionId: "15",
+        title: "3Sum",
+        titleSlug: "3sum",
+        content: "Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Two Pointers", slug: "two-pointers" },
+          { name: "Sorting", slug: "sorting" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 24000,
+        dislikes: 2200,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "11",
+        frontendQuestionId: "11",
+        title: "Container With Most Water",
+        titleSlug: "container-with-most-water",
+        content: "You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Two Pointers", slug: "two-pointers" },
+          { name: "Greedy", slug: "greedy" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 22000,
+        dislikes: 1200,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "42",
+        frontendQuestionId: "42",
+        title: "Trapping Rain Water",
+        titleSlug: "trapping-rain-water",
+        content: "Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.",
+        difficulty: "Hard",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Two Pointers", slug: "two-pointers" },
+          { name: "Dynamic Programming", slug: "dynamic-programming" },
+          { name: "Stack", slug: "stack" },
+          { name: "Monotonic Stack", slug: "monotonic-stack" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 26000,
+        dislikes: 380,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "49",
+        frontendQuestionId: "49",
+        title: "Group Anagrams",
+        titleSlug: "group-anagrams",
+        content: "Given an array of strings strs, group the anagrams together. You can return the answer in any order.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Hash Table", slug: "hash-table" },
+          { name: "String", slug: "string" },
+          { name: "Sorting", slug: "sorting" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 15000,
+        dislikes: 440,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "76",
+        frontendQuestionId: "76",
+        title: "Minimum Window Substring",
+        titleSlug: "minimum-window-substring",
+        content: "Given two strings s and t of lengths m and n respectively, return the minimum window substring of s such that every character in t (including duplicates) is included in the window.",
+        difficulty: "Hard",
+        topicTags: [
+          { name: "Hash Table", slug: "hash-table" },
+          { name: "String", slug: "string" },
+          { name: "Sliding Window", slug: "sliding-window" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 14000,
+        dislikes: 600,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "102",
+        frontendQuestionId: "102",
+        title: "Binary Tree Level Order Traversal",
+        titleSlug: "binary-tree-level-order-traversal",
+        content: "Given the root of a binary tree, return the level order traversal of its nodes' values. (i.e., from left to right, level by level).",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Tree", slug: "tree" },
+          { name: "Breadth-First Search", slug: "breadth-first-search" },
+          { name: "Binary Tree", slug: "binary-tree" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 12000,
+        dislikes: 240,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "104",
+        frontendQuestionId: "104",
+        title: "Maximum Depth of Binary Tree",
+        titleSlug: "maximum-depth-of-binary-tree",
+        content: "Given the root of a binary tree, return its maximum depth.",
+        difficulty: "Easy",
+        topicTags: [
+          { name: "Tree", slug: "tree" },
+          { name: "Depth-First Search", slug: "depth-first-search" },
+          { name: "Breadth-First Search", slug: "breadth-first-search" },
+          { name: "Binary Tree", slug: "binary-tree" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 10000,
+        dislikes: 160,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "136",
+        frontendQuestionId: "136",
+        title: "Single Number",
+        titleSlug: "single-number",
+        content: "Given a non-empty array of integers nums, every element appears twice except for one. Find that single one.",
+        difficulty: "Easy",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Bit Manipulation", slug: "bit-manipulation" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 13000,
+        dislikes: 500,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "152",
+        frontendQuestionId: "152",
+        title: "Maximum Product Subarray",
+        titleSlug: "maximum-product-subarray",
+        content: "Given an integer array nums, find a contiguous non-empty subarray within the array that has the largest product, and return the product.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Dynamic Programming", slug: "dynamic-programming" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 14000,
+        dislikes: 450,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "153",
+        frontendQuestionId: "153",
+        title: "Find Minimum in Rotated Sorted Array",
+        titleSlug: "find-minimum-in-rotated-sorted-array",
+        content: "Suppose an array of length n sorted in ascending order is rotated between 1 and n times.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Binary Search", slug: "binary-search" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 10000,
+        dislikes: 450,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "167",
+        frontendQuestionId: "167",
+        title: "Two Sum II - Input Array Is Sorted",
+        titleSlug: "two-sum-ii-input-array-is-sorted",
+        content: "Given a 1-indexed array of integers numbers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Two Pointers", slug: "two-pointers" },
+          { name: "Binary Search", slug: "binary-search" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 8500,
+        dislikes: 1200,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "198",
+        frontendQuestionId: "198",
+        title: "House Robber",
+        titleSlug: "house-robber",
+        content: "You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Dynamic Programming", slug: "dynamic-programming" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 17000,
+        dislikes: 350,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "200",
+        frontendQuestionId: "200",
+        title: "Number of Islands",
+        titleSlug: "number-of-islands",
+        content: "Given an m x n 2D binary grid grid which represents a map of '1's (land) and '0's (water), return the number of islands.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Depth-First Search", slug: "depth-first-search" },
+          { name: "Breadth-First Search", slug: "breadth-first-search" },
+          { name: "Union Find", slug: "union-find" },
+          { name: "Matrix", slug: "matrix" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 19000,
+        dislikes: 430,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "238",
+        frontendQuestionId: "238",
+        title: "Product of Array Except Self",
+        titleSlug: "product-of-array-except-self",
+        content: "Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i].",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Prefix Sum", slug: "prefix-sum" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 18000,
+        dislikes: 1100,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "268",
+        frontendQuestionId: "268",
+        title: "Missing Number",
+        titleSlug: "missing-number",
+        content: "Given an array nums containing n distinct numbers in the range [0, n], return the only number in the range that is missing from the array.",
+        difficulty: "Easy",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Hash Table", slug: "hash-table" },
+          { name: "Math", slug: "math" },
+          { name: "Binary Search", slug: "binary-search" },
+          { name: "Bit Manipulation", slug: "bit-manipulation" },
+          { name: "Sorting", slug: "sorting" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 9000,
+        dislikes: 3000,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "300",
+        frontendQuestionId: "300",
+        title: "Longest Increasing Subsequence",
+        titleSlug: "longest-increasing-subsequence",
+        content: "Given an integer array nums, return the length of the longest strictly increasing subsequence.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Binary Search", slug: "binary-search" },
+          { name: "Dynamic Programming", slug: "dynamic-programming" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 16000,
+        dislikes: 300,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "322",
+        frontendQuestionId: "322",
+        title: "Coin Change",
+        titleSlug: "coin-change",
+        content: "You are given an integer array coins representing coins of different denominations and an integer amount representing a total amount of money.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Dynamic Programming", slug: "dynamic-programming" },
+          { name: "Breadth-First Search", slug: "breadth-first-search" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 15000,
+        dislikes: 350,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "347",
+        frontendQuestionId: "347",
+        title: "Top K Frequent Elements",
+        titleSlug: "top-k-frequent-elements",
+        content: "Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Hash Table", slug: "hash-table" },
+          { name: "Divide and Conquer", slug: "divide-and-conquer" },
+          { name: "Sorting", slug: "sorting" },
+          { name: "Heap (Priority Queue)", slug: "heap-priority-queue" },
+          { name: "Bucket Sort", slug: "bucket-sort" },
+          { name: "Counting", slug: "counting" },
+          { name: "Quickselect", slug: "quickselect" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 13000,
+        dislikes: 500,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "371",
+        frontendQuestionId: "371",
+        title: "Sum of Two Integers",
+        titleSlug: "sum-of-two-integers",
+        content: "Given two integers a and b, return the sum of the two integers without using the operators + and -.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Math", slug: "math" },
+          { name: "Bit Manipulation", slug: "bit-manipulation" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 3500,
+        dislikes: 4200,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "383",
+        frontendQuestionId: "383",
+        title: "Ransom Note",
+        titleSlug: "ransom-note",
+        content: "Given two strings ransomNote and magazine, return true if ransomNote can be constructed by using the letters from magazine and false otherwise.",
+        difficulty: "Easy",
+        topicTags: [
+          { name: "Hash Table", slug: "hash-table" },
+          { name: "String", slug: "string" },
+          { name: "Counting", slug: "counting" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 4000,
+        dislikes: 400,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "417",
+        frontendQuestionId: "417",
+        title: "Pacific Atlantic Water Flow",
+        titleSlug: "pacific-atlantic-water-flow",
+        content: "There is an m x n rectangular island that borders both the Pacific Ocean and Atlantic Ocean.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Array", slug: "array" },
+          { name: "Depth-First Search", slug: "depth-first-search" },
+          { name: "Breadth-First Search", slug: "breadth-first-search" },
+          { name: "Matrix", slug: "matrix" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 6500,
+        dislikes: 1200,
+        hints: [],
+        userSolutions: []
+      },
+      {
+        questionId: "424",
+        frontendQuestionId: "424",
+        title: "Longest Repeating Character Replacement",
+        titleSlug: "longest-repeating-character-replacement",
+        content: "You are given a string s and an integer k. You can choose any character of the string and change it to any other uppercase English character.",
+        difficulty: "Medium",
+        topicTags: [
+          { name: "Hash Table", slug: "hash-table" },
+          { name: "String", slug: "string" },
+          { name: "Sliding Window", slug: "sliding-window" }
+        ],
+        categoryTitle: "Algorithms",
+        likes: 8000,
+        dislikes: 350,
+        hints: [],
+        userSolutions: []
       }
     ];
 
@@ -834,12 +1375,13 @@ exports.populatePopularQuestions = async (req, res) => {
       }
     }
 
-    console.log(`✅ Backend: Added ${addedCount} popular questions`);
+    console.log(`✅ Backend: Added ${addedCount} comprehensive questions`);
 
     res.json({
       success: true,
-      message: `Added ${addedCount} popular LeetCode questions to the database`,
-      addedCount
+      message: `Added ${addedCount} comprehensive LeetCode questions to the database! Now you have ${addedCount > 0 ? 'many more' : 'all available'} questions to practice.`,
+      addedCount,
+      totalAvailable: popularQuestions.length
     });
 
   } catch (error) {

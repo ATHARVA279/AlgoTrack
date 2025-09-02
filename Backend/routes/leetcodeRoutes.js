@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   syncLeetCodeData,
+  syncAllLeetCodeData,
   getLeetCodeQuestions,
   getLeetCodeQuestionById,
   updateUserSolution,
@@ -17,6 +18,7 @@ router.get("/test", (req, res) => {
 });
 
 router.post("/sync", syncLeetCodeData);
+router.post("/sync-all", syncAllLeetCodeData);
 
 router.post("/populate", populatePopularQuestions);
 

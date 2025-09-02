@@ -126,6 +126,121 @@ class LeetCodeService {
     }
   }
 
+  async getAllUserSolvedProblems(username) {
+    try {
+      console.log(`🔍 Fetching ALL solved problems for ${username}...`);
+
+      // First get user profile to know total solved count
+      const profileQuery = `
+        query getUserProfile($username: String!) {
+          matchedUser(username: $username) {
+            username
+            submitStats: submitStatsGlobal {
+              acSubmissionNum {
+                difficulty
+                count
+                submissions
+              }
+            }
+            profile {
+              ranking
+            }
+          }
+        }
+      `;
+
+      const profileResponse = await this.makeRequest(profileQuery, {
+        username,
+      });
+      const userProfile = profileResponse.data.matchedUser;
+
+      if (!userProfile) {
+        throw new Error("User not found");
+      }
+
+      const totalSolved = userProfile.submitStats.acSubmissionNum.reduce(
+        (sum, stat) => sum + stat.count,
+        0
+      );
+      console.log(`📊 User has solved ${totalSolved} problems total`);
+
+      // Get submissions in batches to get ALL solved problems
+      const allSubmissions = [];
+      const batchSize = 100; // Maximum allowed by LeetCode API
+      let hasMore = true;
+      let offset = 0;
+
+      while (hasMore && allSubmissions.length < totalSolved) {
+        try {
+          console.log(
+            `🔄 Fetching batch ${
+              Math.floor(offset / batchSize) + 1
+            } (offset: ${offset})`
+          );
+
+          const submissions = await this.getUserRecentSubmissions(
+            username,
+            Math.min(batchSize, totalSolved - allSubmissions.length)
+          );
+
+          if (submissions.length === 0) {
+            hasMore = false;
+            break;
+          }
+
+          // Filter out duplicates based on titleSlug
+          const newSubmissions = submissions.filter(
+            (sub) =>
+              !allSubmissions.some(
+                (existing) => existing.titleSlug === sub.titleSlug
+              )
+          );
+
+          allSubmissions.push(...newSubmissions);
+          offset += batchSize;
+
+          // If we got less than requested, we've reached the end
+          if (submissions.length < batchSize) {
+            hasMore = false;
+          }
+
+          // Add delay to respect rate limits
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`❌ Error fetching batch at offset ${offset}:`, error);
+          hasMore = false;
+        }
+      }
+
+      console.log(
+        `✅ Successfully fetched ${allSubmissions.length} unique solved problems`
+      );
+
+      return {
+        submissions: allSubmissions,
+        profile: {
+          totalSolved,
+          easySolved:
+            userProfile.submitStats.acSubmissionNum.find(
+              (s) => s.difficulty === "Easy"
+            )?.count || 0,
+          mediumSolved:
+            userProfile.submitStats.acSubmissionNum.find(
+              (s) => s.difficulty === "Medium"
+            )?.count || 0,
+          hardSolved:
+            userProfile.submitStats.acSubmissionNum.find(
+              (s) => s.difficulty === "Hard"
+            )?.count || 0,
+          ranking: userProfile.profile.ranking,
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching all solved problems:", error);
+      throw error;
+    }
+  }
+
   async getProblemDetails(titleSlug) {
     try {
       console.log(`🔍 Fetching problem details for: ${titleSlug}`);

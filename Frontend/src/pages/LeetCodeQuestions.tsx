@@ -42,6 +42,7 @@ export default function LeetCodeQuestions() {
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [questionsCount, setQuestionsCount] = useState({ total: 0, solved: 0, remaining: 0 });
+  const [leetcodeProfile, setLeetcodeProfile] = useState({ totalSolved: 0, easySolved: 0, mediumSolved: 0, hardSolved: 0, lastSyncAt: null, ranking: null });
 
   const filterQuestions = useCallback(() => {
     console.log("🔍 Filtering questions...");
@@ -81,7 +82,7 @@ export default function LeetCodeQuestions() {
     if (user?.leetcodeUsername) {
       setLeetcodeUsername(user.leetcodeUsername);
     }
-  }, [user]);
+  }, [fetchLeetCodeQuestions, user]);
 
   useEffect(() => {
     filterQuestions();
@@ -99,12 +100,21 @@ export default function LeetCodeQuestions() {
 
   const fetchLeetCodeQuestions = async () => {
     try {
-      console.log("🔄 Fetching ALL LeetCode questions...");
+      console.log("🔄 Fetching user's solved LeetCode questions...");
       setLoading(true);
       const response = await axios.get("/api/leetcode/questions");
       console.log("✅ LeetCode questions response:", response.data);
-      console.log("📊 Number of questions received:", response.data.length);
-      setQuestions(response.data);
+      
+      if (response.data.questions) {
+        console.log("📊 Number of questions received:", response.data.questions.length);
+        setQuestions(response.data.questions);
+        setLeetcodeProfile(response.data.profile);
+      } else {
+        // Fallback for old API format
+        console.log("📊 Number of questions received:", response.data.length);
+        setQuestions(response.data);
+      }
+      
       await fetchQuestionsCount();
     } catch (error) {
       console.error("❌ Error fetching LeetCode questions:", error);
@@ -114,7 +124,7 @@ export default function LeetCodeQuestions() {
     }
   };
 
-  const syncLeetCodeData = async () => {
+  const syncLeetCodeData = async (syncAll = false) => {
     const usernameToSync = leetcodeUsername.trim() || user?.leetcodeUsername;
 
     if (!usernameToSync) {
@@ -124,13 +134,18 @@ export default function LeetCodeQuestions() {
 
     try {
       setSyncing(true);
-      console.log("🔄 Starting LeetCode sync for:", usernameToSync);
+      const syncType = syncAll ? "comprehensive" : "quick";
+      const endpoint = syncAll ? "/api/leetcode/sync-all" : "/api/leetcode/sync";
       
-      // Increase timeout for sync request to 60 seconds
-      const response = await axios.post("/api/leetcode/sync", {
+      console.log(`🔄 Starting ${syncType} LeetCode sync for:`, usernameToSync);
+      
+      // Increase timeout for comprehensive sync
+      const timeout = syncAll ? 300000 : 60000; // 5 minutes for full sync, 1 minute for quick
+      
+      const response = await axios.post(endpoint, {
         leetcodeUsername: usernameToSync,
       }, {
-        timeout: 60000, // 60 seconds
+        timeout,
         withCredentials: true
       });
 
@@ -144,7 +159,7 @@ export default function LeetCodeQuestions() {
       let errorMessage = "Failed to sync LeetCode data";
       if (error && typeof error === 'object' && 'code' in error) {
         if (error.code === 'ECONNABORTED') {
-          errorMessage = "Sync is taking longer than expected. Please try again or check your LeetCode username.";
+          errorMessage = "Sync is taking longer than expected. This is normal for comprehensive sync. Please try again.";
         } else if ('response' in error && error.response && typeof error.response === 'object' && 'data' in error.response) {
           const responseData = error.response.data as any;
           errorMessage = responseData?.message || errorMessage;
@@ -241,17 +256,31 @@ export default function LeetCodeQuestions() {
             />
             <div className="flex space-x-3">
               <button
-                onClick={syncLeetCodeData}
+                onClick={() => syncLeetCodeData(false)}
                 disabled={syncing}
                 className="cyber-button flex-1 flex items-center justify-center space-x-2"
               >
                 {syncing ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Syncing... (This may take up to 60 seconds)</span>
+                    <span>Syncing...</span>
                   </>
                 ) : (
-                  <span>Sync Data</span>
+                  <span>Quick Sync</span>
+                )}
+              </button>
+              <button
+                onClick={() => syncLeetCodeData(true)}
+                disabled={syncing}
+                className="cyber-button flex-1 flex items-center justify-center space-x-2 bg-neon-purple/20 border-neon-purple"
+              >
+                {syncing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Syncing All...</span>
+                  </>
+                ) : (
+                  <span>Sync ALL Data</span>
                 )}
               </button>
               <button
@@ -276,7 +305,10 @@ export default function LeetCodeQuestions() {
           <div>
             <h2 className="text-2xl font-bold">LeetCode Questions</h2>
             <p className="text-gray-400">
-              {questions.length} questions displayed • {questionsCount.solved} solved • {questionsCount.total} total in database
+              {questions.length} solved questions • Easy: {leetcodeProfile.easySolved} • Medium: {leetcodeProfile.mediumSolved} • Hard: {leetcodeProfile.hardSolved}
+              {leetcodeProfile.lastSyncAt && (
+                <span> • Last sync: {new Date(leetcodeProfile.lastSyncAt).toLocaleDateString()}</span>
+              )}
             </p>
           </div>
 
@@ -441,9 +473,17 @@ export default function LeetCodeQuestions() {
           <div className="text-center py-12">
             <p className="text-gray-400 text-lg">
               {questions.length === 0
-                ? "No LeetCode questions found. Sync your data to get started!"
+                ? "No solved LeetCode questions found. Use 'Sync ALL Data' to import all your solved problems!"
                 : "No questions match your filters."}
             </p>
+            {questions.length === 0 && (
+              <button
+                onClick={() => setShowSyncModal(true)}
+                className="cyber-button mt-4"
+              >
+                Import Your Solved Questions
+              </button>
+            )}
           </div>
         )}
       </motion.div>
