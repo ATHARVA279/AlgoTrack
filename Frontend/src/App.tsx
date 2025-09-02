@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,33 +7,28 @@ import {
 } from "react-router-dom";
 
 import { Navbar } from "./components/Navbar";
-import LandingPage from "./pages/LandingPage";
-import Dashboard from "./pages/Dashboard";
-import QuestionDetail from "./pages/QuestionDetail";
-import AddQuestion from "./pages/AddQuestion";
-import Profile from "./pages/Profile";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-
+import { LoadingSpinner } from "./components/LoadingSpinner";
 import { useAuth } from "./utils/authContext";
-import Questions from "./pages/Questions";
-import LeetCodeQuestions from "./pages/LeetCodeQuestions";
-import LeetCodeQuestionDetail from "./pages/LeetCodeQuestionDetail";
+
+// Lazy load pages to reduce initial bundle size
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const QuestionDetail = lazy(() => import("./pages/QuestionDetail"));
+const AddQuestion = lazy(() => import("./pages/AddQuestion"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Questions = lazy(() => import("./pages/Questions"));
+const LeetCodeQuestions = lazy(() => import("./pages/LeetCodeQuestions"));
+const LeetCodeQuestionDetail = lazy(() => import("./pages/LeetCodeQuestionDetail"));
 
 function App() {
-  const { isAuthenticated, isLoading, fetchUser } = useAuth();
-
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-cyber-black">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-purple mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
+      <div className="min-h-screen bg-cyber-black">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -43,7 +38,8 @@ function App() {
       <div className="min-h-screen bg-cyber-black">
         <Navbar />
         <main className="container mx-auto px-4 py-8">
-          <Routes>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route
               path="/login"
@@ -92,7 +88,8 @@ function App() {
               path="/leetcode-question/:id"
               element={isAuthenticated ? <LeetCodeQuestionDetail /> : <Navigate to="/login" />}
             />
-          </Routes>
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </Router>

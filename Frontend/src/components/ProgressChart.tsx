@@ -9,7 +9,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { motion } from "framer-motion";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp } from "../utils/icons";
 
 const getLastNDays = (n) => {
   const days = [];

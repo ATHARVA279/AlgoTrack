@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axiosInstance";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import toast from "react-hot-toast";
 import { useAuth } from "../utils/authContext";
 
 const Login = () => {
@@ -28,7 +27,7 @@ const Login = () => {
         }
         
         toast.success("Logged in successfully!");
-        await fetchUser(); 
+        fetchUser();
         navigate("/dashboard");
       } else {
         toast.error("Login failed!");
@@ -92,7 +91,7 @@ const Login = () => {
           </p>
         </div>
       </div>
-      <ToastContainer position="top-right" autoClose={3000} />
+
     </div>
   );
 };

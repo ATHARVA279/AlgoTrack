@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Code2, MessageCircle, ArrowLeft } from "lucide-react";
+import { Code2, MessageCircle, ArrowLeft } from "../utils/icons";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { CodeHighlighter } from "../components/CodeHighlighter";
 
 const difficultyColors = {
   Easy: "text-green-400",
@@ -116,18 +115,10 @@ function QuestionDetail() {
             </div>
 
             <div className="cyber-card bg-cyber-darker overflow-hidden">
-              <SyntaxHighlighter
+              <CodeHighlighter
+                code={question.solution.code}
                 language={question.solution.language}
-                style={atomDark}
-                customStyle={{
-                  background: "transparent",
-                  padding: "1.5rem",
-                  margin: 0,
-                  borderRadius: "0.5rem",
-                }}
-              >
-                {question.solution.code}
-              </SyntaxHighlighter>
+              />
             </div>
 
             <div className="cyber-card bg-gradient-to-r from-neon-purple/5 to-neon-blue/5">

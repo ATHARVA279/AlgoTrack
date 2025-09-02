@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useRef,
 } from "react";
 import axios from "../utils/axiosInstance";
 
@@ -30,10 +31,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const fetchingRef = useRef(false);
   const isAuthenticated = !!user;
 
   const fetchUser = useCallback(async () => {
+    if (fetchingRef.current) return;
+
     try {
+      fetchingRef.current = true;
       setIsLoading(true);
       const res = await axios.get("/api/auth/me", { withCredentials: true });
       if (res.data.success) {
@@ -46,6 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(null);
     } finally {
       setIsLoading(false);
+      setHasInitialized(true);
+      fetchingRef.current = false;
     }
   }, []);
 
@@ -63,8 +71,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    if (!hasInitialized) {
+      fetchUser();
+    }
+  }, [fetchUser, hasInitialized]);
 
   return (
     <AuthContext.Provider

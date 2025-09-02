@@ -7,7 +7,7 @@ import {
   BookOpen,
   Filter,
   Search,
-} from "lucide-react";
+} from "../utils/icons";
 import { motion } from "framer-motion";
 
 import { useEffect } from "react";

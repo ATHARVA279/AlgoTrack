@@ -7,7 +7,7 @@ import {
   CheckCircle2,
   Circle,
   ExternalLink,
-} from "lucide-react";
+} from "../utils/icons";
 import { Link } from "react-router-dom";
 import axios from "../utils/axiosInstance";
 import { toast } from "react-hot-toast";

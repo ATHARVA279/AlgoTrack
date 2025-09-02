@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, PlusCircle } from "lucide-react";
+import { Search, Filter, PlusCircle } from "../utils/icons";
 import { Link } from "react-router-dom";
 
 export default function Questions() {

@@ -34,15 +34,14 @@ const Signup = () => {
         }
         
         toast.success("Account created successfully!");
-        await fetchUser(); 
+        fetchUser();
         navigate("/dashboard");
       } else {
         toast.error(res.data.message || "Signup failed!");
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error(err);
-      const error = err as { response?: { data?: { msg?: string } }; message?: string };
-      toast.error(error.response?.data?.msg || error.message || "Something went wrong!");
+      toast.error(err.response?.data?.msg || err.message || "Something went wrong!");
     }
   };
 

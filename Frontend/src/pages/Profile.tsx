@@ -6,30 +6,13 @@ import {
   Download,
   Settings,
   User,
-} from "lucide-react";
-
-import { useEffect, useState } from "react";
+} from "../utils/icons";
+import { useAuth } from "../utils/authContext";
 
 function Profile() {
-  const [userData, setUserData] = useState(null);
+  const { user, isLoading } = useAuth();
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const res = await fetch("https://algotrack-vujc.onrender.com/api/users/profile", {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setUserData(data);
-      } catch (err) {
-        console.error("Error fetching user profile:", err);
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
-  if (!userData) {
+  if (isLoading || !user) {
     return (
       <div className="flex items-center justify-center h-screen">
         <p className="text-gray-500">Loading profile...</p>
@@ -64,8 +47,8 @@ function Profile() {
                 <User className="w-8 h-8 text-neon-purple" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">{userData.name}</h2>
-                <p className="text-gray-400">{userData.email}</p>
+                <h2 className="text-2xl font-bold">{user.username}</h2>
+                <p className="text-gray-400">{user.email}</p>
               </div>
             </div>
             <button className="cyber-button flex items-center space-x-2">
@@ -81,7 +64,7 @@ function Profile() {
             <div>
               <p className="text-gray-400">Member Since</p>
               <p className="text-xl font-semibold">
-                {new Date(userData.joinedDate).toLocaleDateString("en-IN", {
+                {new Date().toLocaleDateString("en-IN", {
                   day: "2-digit",
                   month: "2-digit",
                   year: "numeric",
@@ -102,14 +85,14 @@ function Profile() {
           <Trophy className="w-8 h-8 text-neon-purple mb-4" />
           <h3 className="text-lg font-semibold mb-2">Problems Solved</h3>
           <p className="text-3xl font-bold neon-text">
-            {userData.totalSolved} questions
+            {user.solvedQuestions?.length || 0} questions
           </p>
         </div>
 
         <div className="cyber-card">
           <BookOpen className="w-8 h-8 text-neon-purple mb-4" />
           <h3 className="text-lg font-semibold mb-2">Current Streak</h3>
-          <p className="text-3xl font-bold neon-text">{userData.streak} days</p>
+          <p className="text-3xl font-bold neon-text">{user.streak} days</p>
         </div>
       </motion.div>
 
@@ -119,24 +102,22 @@ function Profile() {
         transition={{ delay: 0.3 }}
         className="cyber-card"
       >
-        <h3 className="text-xl font-bold mb-6">Topics Progress</h3>
+        <h3 className="text-xl font-bold mb-6">LeetCode Progress</h3>
         <div className="space-y-4">
-          {Object.entries(userData.topicsCompleted).map(([topic, count]) => (
-            <div key={topic}>
+          {user.leetcodeUsername ? (
+            <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-400">{topic}</span>
-                <span className="text-neon-purple">{count} solved</span>
+                <span className="text-gray-400">LeetCode Username</span>
+                <span className="text-neon-purple">{user.leetcodeUsername}</span>
               </div>
-              <div className="h-2 bg-cyber-darker rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-neon-purple to-neon-blue"
-                  style={{
-                    width: `${(count / userData.totalSolved) * 100}%`,
-                  }}
-                />
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-400">LeetCode Problems</span>
+                <span className="text-neon-purple">{user.leetcodeSolvedQuestions?.length || 0} solved</span>
               </div>
             </div>
-          ))}
+          ) : (
+            <p className="text-gray-400">No LeetCode username linked</p>
+          )}
         </div>
       </motion.div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus } from "../utils/icons";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Editor from "@monaco-editor/react";
@@ -43,14 +43,17 @@ function AddQuestion() {
     }
 
     try {
-      const res = await fetch("https://algotrack-vujc.onrender.com/api/questions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(formData),
-      });
+      const res = await fetch(
+        "https://algotrack-vujc.onrender.com/api/questions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Failed to add question");

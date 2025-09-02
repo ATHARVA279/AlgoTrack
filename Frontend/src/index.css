@@ -47,3 +47,20 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-neon-purple/50;
 }
+
+/* Simple code highlighting styles */
+.code-highlighter {
+  @apply bg-cyber-darker text-gray-300;
+}
+
+.code-highlighter code {
+  @apply text-gray-300;
+}
+
+.language-javascript code,
+.language-python code,
+.language-java code,
+.language-cpp code,
+.language-c code {
+  @apply text-gray-300;
+}

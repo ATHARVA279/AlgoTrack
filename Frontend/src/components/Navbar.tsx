@@ -5,7 +5,7 @@ import {
   UserCircle,
   Settings,
   FileText,
-} from "lucide-react";
+} from "../utils/icons";
 import { useAuth } from "../utils/authContext";
 
 export function Navbar() {

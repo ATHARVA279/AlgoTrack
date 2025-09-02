@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Code2, Brain, Zap, Trophy } from "lucide-react";
+import { Code2, Brain, Zap, Trophy } from "../utils/icons";
 import { motion } from "framer-motion";
 
 function LandingPage() {

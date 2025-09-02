@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink, Save, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Save, CheckCircle2, Circle } from "../utils/icons";
 import Editor from "@monaco-editor/react";
 import axios from "../utils/axiosInstance";
 import { toast } from "react-hot-toast";
