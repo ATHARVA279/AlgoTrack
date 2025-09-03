@@ -5,7 +5,7 @@ class LeetCodeService {
     this.baseURL = "https://leetcode.com/api";
     this.graphqlURL = "https://leetcode.com/graphql";
     this.axiosInstance = axios.create({
-      timeout: 10000, // 10 second timeout for individual requests
+      timeout: 10000, 
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -130,7 +130,6 @@ class LeetCodeService {
     try {
       console.log(`🔍 Fetching ALL solved problems for ${username}...`);
 
-      // First get user profile to know total solved count
       const profileQuery = `
         query getUserProfile($username: String!) {
           matchedUser(username: $username) {
@@ -164,7 +163,6 @@ class LeetCodeService {
       );
       console.log(`📊 User has solved ${totalSolved} problems total`);
 
-      // Try multiple aggressive strategies to get maximum submissions
       const allSubmissions = [];
       const seenTitleSlugs = new Set();
       

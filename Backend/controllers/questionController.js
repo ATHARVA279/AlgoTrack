@@ -11,10 +11,8 @@ exports.addQuestion = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     userId = decoded.id;
 
-    console.log("Incoming cookies:", req.cookies);
 
-    const question = await Question.create(questionData);
-    console.log("Question created with ID:", question._id);
+  const question = await Question.create(questionData);
 
     if (userId) {
       const updatedUser = await User.findByIdAndUpdate(
@@ -31,18 +29,9 @@ exports.addQuestion = async (req, res) => {
       );
 
       if (updatedUser) {
-        console.log(
-          "Question added to user's solvedQuestions:",
-          updatedUser.solvedQuestions
-        );
-
         const streak = calculateStreak(updatedUser.solvedQuestions);
-        console.log("User's current streak:", streak);
-
         updatedUser.streak = streak;
         await updatedUser.save();
-      } else {
-        console.warn("User not found or not updated.");
       }
     }
 
@@ -95,7 +84,6 @@ exports.getMonthlyProgress = async (req, res) => {
   try {
     const token = req.cookies?.token;
     if (!token) {
-      console.warn("No token found in cookies");
       return res.status(401).json({ message: "Unauthorized" });
     }
 

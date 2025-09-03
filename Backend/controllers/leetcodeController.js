@@ -5,19 +5,16 @@ const jwt = require("jsonwebtoken");
 
 exports.syncAllLeetCodeData = async (req, res) => {
   try {
-    console.log("🔄 Backend: Starting COMPREHENSIVE LeetCode sync...");
     let { leetcodeUsername } = req.body;
 
     const token =
       req.cookies?.token || req.headers.authorization?.replace("Bearer ", "");
-    if (!token) {
-      console.log("❌ Backend: No token provided for sync");
+  if (!token) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
-    console.log("👤 Backend: Syncing ALL data for user ID:", userId);
 
     const currentUser = await User.findById(userId);
     if (!currentUser) {
@@ -32,11 +29,9 @@ exports.syncAllLeetCodeData = async (req, res) => {
       return res.status(400).json({ message: "LeetCode username is required" });
     }
 
-    console.log("🔗 Backend: LeetCode username:", leetcodeUsername);
 
     // Get ALL solved problems, not just recent ones
     const { submissions: allSubmissions, profile } = await leetcodeService.getAllUserSolvedProblems(leetcodeUsername);
-    console.log("📊 Backend: Found ALL submissions:", allSubmissions.length);
 
     if (allSubmissions.length === 0) {
       return res.status(400).json({
@@ -63,19 +58,13 @@ exports.syncAllLeetCodeData = async (req, res) => {
 
     for (const submission of allSubmissions) {
       try {
-        processedCount++;
-        console.log(
-          `🔄 Backend: Processing ${processedCount}/${allSubmissions.length}: ${submission.titleSlug}`
-        );
+  processedCount++;
 
         const problemDetails = await leetcodeService.getProblemDetails(
           submission.titleSlug
         );
 
         if (!problemDetails) {
-          console.log(
-            `⚠️ Backend: No problem details for ${submission.titleSlug}`
-          );
           continue;
         }
 

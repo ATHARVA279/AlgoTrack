@@ -24,4 +24,6 @@ export {
   TrendingUp,
   Flame,
   RefreshCw,
+  AlertCircle,
+  Award,
 } from "lucide-react";

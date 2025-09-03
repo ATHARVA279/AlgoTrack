@@ -4,6 +4,8 @@ import { Code2, MessageCircle, ArrowLeft } from "../utils/icons";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { CodeHighlighter } from "../components/CodeHighlighter";
+import { AIAnalysis } from "../components/AIAnalysis";
+import { AIAnalysisButton } from "../components/AIAnalysisButton";
 
 const difficultyColors = {
   Easy: "text-green-400",
@@ -15,6 +17,8 @@ function QuestionDetail() {
   const { id } = useParams();
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [showAiAnalysis, setShowAiAnalysis] = useState(false);
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -130,6 +134,22 @@ function QuestionDetail() {
                 <ReactMarkdown>{question.solution.explanation}</ReactMarkdown>
               </div>
             </div>
+
+            {/* AI Analysis Section */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">AI Code Analysis</h3>
+              <AIAnalysisButton
+                question={question}
+                onAnalysisComplete={(analysis) => {
+                  setAiAnalysis(analysis);
+                  setShowAiAnalysis(true);
+                }}
+              />
+            </div>
+
+            {showAiAnalysis && aiAnalysis && (
+              <AIAnalysis analysis={aiAnalysis} />
+            )}
           </div>
         </motion.div>
       )}

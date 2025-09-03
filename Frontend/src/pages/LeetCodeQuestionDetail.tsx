@@ -5,6 +5,8 @@ import { ArrowLeft, ExternalLink, Save, CheckCircle2, Circle } from "../utils/ic
 import Editor from "@monaco-editor/react";
 import axios from "../utils/axiosInstance";
 import { toast } from "react-hot-toast";
+import { AIAnalysis } from "../components/AIAnalysis";
+import { AIAnalysisButton } from "../components/AIAnalysisButton";
 
 interface LeetCodeQuestion {
   _id: string;
@@ -41,6 +43,8 @@ export default function LeetCodeQuestionDetail() {
   const [code, setCode] = useState("");
   const [notes, setNotes] = useState("");
   const [isSolved, setIsSolved] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [showAiAnalysis, setShowAiAnalysis] = useState(false);
 
   const languages = [
     { value: "javascript", label: "JavaScript" },
@@ -418,23 +422,36 @@ public:
             />
           </div>
 
-          <button
-            onClick={saveSolution}
-            disabled={saving || !code.trim()}
-            className="cyber-button w-full flex items-center justify-center space-x-2"
-          >
-            {saving ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                <span>{isSolved && code.trim() ? "Save & Add to Collection" : "Save Solution"}</span>
-              </>
-            )}
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={saveSolution}
+              disabled={saving || !code.trim()}
+              className="cyber-button w-full flex items-center justify-center space-x-2"
+            >
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>{isSolved && code.trim() ? "Save & Add to Collection" : "Save Solution"}</span>
+                </>
+              )}
+            </button>
+
+            <AIAnalysisButton
+              questionId={question?._id || ''}
+              code={code}
+              language={selectedLanguage}
+              onAnalysisComplete={(analysis) => {
+                setAiAnalysis(analysis);
+                setShowAiAnalysis(true);
+              }}
+              disabled={!code.trim()}
+            />
+          </div>
 
           {isSolved && code.trim() && (
             <div className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
@@ -469,6 +486,17 @@ public:
             </div>
           )}
         </motion.div>
+
+        {/* AI Analysis Section */}
+        {showAiAnalysis && aiAnalysis && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <AIAnalysis analysis={aiAnalysis} />
+          </motion.div>
+        )}
       </div>
     </div>
   );
