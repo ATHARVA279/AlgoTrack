@@ -192,3 +192,6 @@ Respond with JSON:
 }
 
 module.exports = new GeminiService();
+const BASE_API_URL = process.env.BASE_API_URL || "http://localhost:5000";
+
+module.exports = new GeminiService();

@@ -23,11 +23,9 @@ function QuestionDetail() {
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
-        const res = await fetch(`https://algotrack-vujc.onrender.com/api/questions/${id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions/${id}`, {
           credentials: "include",
         });
-
-        if (!res.ok) throw new Error("Failed to fetch question");
         const data = await res.json();
         setQuestion(data);
       } catch (err) {

@@ -127,12 +127,9 @@ public:
   const saveSolution = async () => {
     if (!question) return;
 
-    console.log("🎯 Frontend: saveSolution called");
-
     try {
       setSaving(true);
 
-      // First, save to LeetCode question (existing functionality)
       await axios.put(`/api/leetcode/questions/${question._id}/solution`, {
         code: code.trim(),
         language: selectedLanguage,
@@ -140,11 +137,8 @@ public:
         isSolved
       });
 
-      // If marked as solved and has code, also add to manual questions collection
       if (isSolved && code.trim()) {
-        console.log("🎯 Adding to manual questions collection...");
         
-        // Extract sample input/output from question content
         let sampleInput = "Input will be provided";
         let sampleOutput = "Expected output";
         
@@ -152,9 +146,7 @@ public:
           sampleInput = question.sampleTestCase;
         }
         
-        // Try to extract from HTML content with better parsing
         if (question.content) {
-          // Clean the content first to make parsing easier
           const cleanContent = question.content
             .replace(/<[^>]*>/g, ' ')
             .replace(/&nbsp;/g, ' ')
@@ -163,7 +155,6 @@ public:
             .replace(/&amp;/g, '&')
             .replace(/\s+/g, ' ');
 
-          // Look for Example patterns with Input/Output
           const examplePattern = /Example\s*\d*:\s*Input:\s*([^O]+?)Output:\s*([^E\n]+?)(?=Example|Explanation|Constraints|$)/gi;
           const exampleMatch = examplePattern.exec(cleanContent);
           
@@ -171,7 +162,6 @@ public:
             sampleInput = exampleMatch[1].trim();
             sampleOutput = exampleMatch[2].trim();
           } else {
-            // Fallback: Look for first Input: and Output: patterns
             const inputMatch = cleanContent.match(/Input:\s*([^O\n]+?)(?=Output|Explanation|$)/i);
             const outputMatch = cleanContent.match(/Output:\s*([^E\n]+?)(?=Explanation|Example|Constraints|$)/i);
             
@@ -179,12 +169,10 @@ public:
             if (outputMatch) sampleOutput = outputMatch[1].trim();
           }
           
-          // Clean up the extracted values
           sampleInput = sampleInput.replace(/^\s*s\s*=\s*/, '').trim();
           sampleOutput = sampleOutput.replace(/^\s*(true|false)\s*/, '$1').trim();
         }
 
-        // Clean description from HTML and remove examples section
         let description = question.content
           .replace(/<[^>]*>/g, '')
           .replace(/&nbsp;/g, ' ')
@@ -194,13 +182,10 @@ public:
           .replace(/\s+/g, ' ')
           .trim();
 
-        // Remove examples section since we extract them separately
         description = description.replace(/Example\s*\d*:[\s\S]*?(?=Constraints:|$)/gi, '').trim();
         
-        // Remove constraints section to keep description clean
         description = description.replace(/Constraints:[\s\S]*$/gi, '').trim();
 
-        // Prepare data in the same format as AddQuestion.tsx
         const questionData = {
           title: question.title,
           description: description || `${question.title}\n\nLeetCode problem #${question.frontendQuestionId}`,
@@ -215,16 +200,6 @@ public:
           }
         };
 
-        console.log("📋 Question data being sent:", {
-          title: questionData.title,
-          difficulty: questionData.difficulty,
-          topic: questionData.topic,
-          sampleInput: questionData.sampleInput,
-          sampleOutput: questionData.sampleOutput,
-          descriptionLength: questionData.description.length
-        });
-
-        // Use the same API call as AddQuestion.tsx
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/questions`, {
           method: "POST",
           headers: {
@@ -233,12 +208,13 @@ public:
           credentials: "include",
           body: JSON.stringify(questionData),
         });
+        const resData = await res.json().catch(() => ({}));
 
         if (!res.ok) {
           throw new Error("Failed to add to questions collection");
         }
 
-        toast.success("🎉 Solution saved and added to your Questions collection!");
+        toast.success("Solution saved and added to your Questions collection!");
       } else {
         toast.success("Solution saved successfully!");
       }

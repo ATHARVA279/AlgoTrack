@@ -1,7 +1,7 @@
 import axios from "axios";
 import { requestCache } from "./requestCache";
 
-const baseURL = "http://localhost:5000";
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const axiosInstance = axios.create({
   baseURL,
@@ -15,12 +15,10 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Check cache for GET requests
     if (config.method === 'get') {
       const cacheKey = `${config.url}?${JSON.stringify(config.params || {})}`;
       const cached = requestCache.get(cacheKey);
       if (cached) {
-        // Return cached response
         return Promise.reject({
           __cached: true,
           data: cached,
@@ -41,7 +39,6 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => {
-    // Cache successful GET responses
     if (response.config.method === 'get' && response.status === 200) {
       const cacheKey = `${response.config.url}?${JSON.stringify(response.config.params || {})}`;
       requestCache.set(cacheKey, response.data);
@@ -49,7 +46,6 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Handle cached responses
     if (error.__cached) {
       return Promise.resolve({
         data: error.data,

@@ -43,8 +43,9 @@ function AddQuestion() {
     }
 
     try {
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/questions`;
       const res = await fetch(
-        "https://algotrack-vujc.onrender.com/api/questions",
+        apiUrl,
         {
           method: "POST",
           headers: {

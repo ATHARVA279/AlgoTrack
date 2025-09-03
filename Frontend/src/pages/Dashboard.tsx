@@ -25,7 +25,6 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [questions, setQuestions] = useState([]);
-  // const [streak, setStreak] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const streak = sessionStorage.getItem("streak");
@@ -33,7 +32,8 @@ function Dashboard() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const res = await fetch("https://algotrack-vujc.onrender.com/api/questions", {
+        const apiUrl = `${import.meta.env.VITE_API_URL}/api/questions`;
+        const res = await fetch(apiUrl, {
           credentials: "include",
         });
 
@@ -53,8 +53,6 @@ function Dashboard() {
 
     fetchQuestions();
   }, []);
-
-  console.log("Questions:", questions);
 
   return (
     <div className="space-y-8">

@@ -18,7 +18,6 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleAnalyze = async () => {
-    // ...existing code...
     if (!question?.solution?.code?.trim()) {
       toast.error('Please write some code before analyzing');
       return;
@@ -27,7 +26,6 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
     setIsAnalyzing(true);
     
     try {
-      // Send the full question object to the backend
       const response = await axios.post('/api/ai/analyze', {
         question
       });

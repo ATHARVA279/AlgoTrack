@@ -140,4 +140,3 @@ export const AIStats: React.FC = () => {
     </motion.div>
   );
 };
-</content>

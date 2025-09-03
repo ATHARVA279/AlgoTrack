@@ -42,7 +42,7 @@ const ProgressChart = () => {
     const fetchProgress = async () => {
       try {
         const res = await fetch(
-          "https://algotrack-vujc.onrender.com/api/questions/monthly-progress",
+          `${import.meta.env.VITE_API_URL}/api/questions/monthly-progress`,
           { credentials: "include" }
         );
 
