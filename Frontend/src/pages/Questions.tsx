@@ -15,7 +15,7 @@ export default function Questions() {
     const fetchQuestions = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/questions`,
+          `https://algotrack-vujc.onrender.com/api/questions`,
           {
             credentials: "include",
           }

@@ -32,7 +32,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const apiUrl = `${import.meta.env.VITE_API_URL}/api/questions`;
+        const apiUrl = `https://algotrack-vujc.onrender.com/api/questions`;
         const res = await fetch(apiUrl, {
           credentials: "include",
         });

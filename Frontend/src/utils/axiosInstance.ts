@@ -1,14 +1,7 @@
 import axios from "axios";
 import { requestCache } from "./requestCache";
 
-type ViteEnv = { VITE_API_URL?: string; DEV?: boolean };
-const env = ((import.meta as unknown) as { env: ViteEnv }).env || {};
-const baseURL = env.VITE_API_URL || (env.DEV ? "http://localhost:5000" : "");
-
-if (!baseURL) {
-  // Fail fast in production if API base URL is not configured
-  throw new Error("VITE_API_URL is not set. Configure it in your production environment.");
-}
+const baseURL = "https://algotrack-vujc.onrender.com";
 
 const axiosInstance = axios.create({
   baseURL,
