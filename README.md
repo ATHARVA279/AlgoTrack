@@ -11,8 +11,6 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248?style=flat&logo=mongodb)](https://mongodb.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Frontend-3178C6?style=flat&logo=typescript)](https://typescriptlang.org/)
 
-[🌟 Features](#features) • [🛠️ Tech Stack](#tech-stack) • [⚡ Quick Start](#quick-start) • [📖 API Documentation](#api-documentation)
-
 </div>
 
 ---
@@ -28,7 +26,6 @@
 - [Future Enhancements](#-future-enhancements)
 - [Contributing](#-contributing)
 - [Troubleshooting](#-troubleshooting)
-- [License](#-license)
 
 ---
 
@@ -296,18 +293,6 @@ I welcome contributions! Here's how you can help:
    - Clear browser cookies and localStorage
    - Check JWT_SECRET in environment variables
    - Ensure cookies are enabled in browser
-
-### Getting Help
-
-- Check the [Issues](https://github.com/yourusername/algotrack/issues) page
-- Create a new issue with detailed description
-- Join our community discussions
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
