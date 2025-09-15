@@ -57,6 +57,10 @@ export default function LeetCodeQuestionDetail() {
   const fetchQuestionDetails = useCallback(async () => {
     try {
       setLoading(true);
+      if (!id) {
+        toast.error("Invalid question id");
+        return;
+      }
       const response = await axios.get(`/api/leetcode/questions/${id}`);
       setQuestion(response.data);
     } catch (error) {

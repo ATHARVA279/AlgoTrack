@@ -492,7 +492,8 @@ export default function LeetCodeQuestions() {
 
               <div className="flex-shrink-0">
                 <Link
-                  to={`/leetcode-question/${question._id}`}
+                  to={question._id ? `/leetcode-question/${question._id}` : '#'}
+                  onClick={(e) => { if (!question._id) { e.preventDefault(); } }}
                   className="cyber-button"
                 >
                   {question.isSolved ? "View Solution" : "Solve"}

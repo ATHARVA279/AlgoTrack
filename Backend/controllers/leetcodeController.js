@@ -370,6 +370,9 @@ exports.getLeetCodeQuestions = async (req, res) => {
 exports.getLeetCodeQuestionById = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id || typeof id !== 'string' || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid question id" });
+    }
     const token =
       req.cookies?.token || req.headers.authorization?.replace("Bearer ", "");
 
