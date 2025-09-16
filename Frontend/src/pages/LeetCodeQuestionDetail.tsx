@@ -133,15 +133,20 @@ public:
 
     try {
       setSaving(true);
+      console.log("💾 Saving solution for question:", question.title);
 
-      await axios.put(`/api/leetcode/questions/${question._id}/solution`, {
+      // First, save to LeetCode questions collection
+      const leetcodeResponse = await axios.put(`/api/leetcode/questions/${question._id}/solution`, {
         code: code.trim(),
         language: selectedLanguage,
         notes: notes.trim(),
         isSolved
       });
 
+      console.log("✅ LeetCode solution saved:", leetcodeResponse.data);
+
       if (isSolved && code.trim()) {
+        console.log("🔄 Adding to general questions collection...");
         
         let sampleInput = "Input will be provided";
         let sampleOutput = "Expected output";
@@ -204,29 +209,37 @@ public:
           }
         };
 
-        const res = await fetch(`https://algotrack-vujc.onrender.com/api/questions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(questionData),
-        });
-        const resData = await res.json().catch(() => ({}));
+        try {
+          const res = await fetch(`https://algotrack-vujc.onrender.com/api/questions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(questionData),
+          });
+          const resData = await res.json().catch(() => ({}));
 
-        if (!res.ok) {
-          throw new Error("Failed to add to questions collection");
+          if (!res.ok) {
+            console.warn("⚠️ Failed to add to general questions collection:", resData);
+            toast.success("Solution saved to LeetCode collection! (Failed to add to general collection)");
+          } else {
+            console.log("✅ Added to general questions collection");
+            toast.success("Solution saved and added to your Questions collection!");
+          }
+        } catch (generalError) {
+          console.warn("⚠️ Error adding to general questions collection:", generalError);
+          toast.success("Solution saved to LeetCode collection! (Failed to add to general collection)");
         }
-
-        toast.success("Solution saved and added to your Questions collection!");
       } else {
         toast.success("Solution saved successfully!");
       }
       
       await fetchQuestionDetails();
     } catch (error) {
-      console.error("Error saving solution:", error);
-      toast.error("Failed to save solution");
+      console.error("❌ Error saving solution:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to save solution";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -422,9 +435,14 @@ public:
             </button>
 
             <AIAnalysisButton
-              questionId={question?._id || ''}
-              code={code}
-              language={selectedLanguage}
+              question={{
+                _id: question?._id || '',
+                title: question?.title || '',
+                solution: {
+                  code: code,
+                  language: selectedLanguage
+                }
+              }}
               onAnalysisComplete={(analysis) => {
                 setAiAnalysis(analysis);
                 setShowAiAnalysis(true);

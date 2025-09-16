@@ -401,6 +401,8 @@ exports.getLeetCodeQuestionById = async (req, res) => {
       },
     };
 
+    console.log("✅ Fetched question details for:", question.title, "User solution exists:", !!userSolution);
+
     res.json(response);
   } catch (error) {
     console.error("Error fetching LeetCode question:", error);
@@ -676,7 +678,7 @@ exports.updateUserSolution = async (req, res) => {
 
     await leetcodeQuestion.save();
 
-
+    console.log("✅ Solution updated successfully for question:", leetcodeQuestion.title);
 
     res.json({
       success: true,
