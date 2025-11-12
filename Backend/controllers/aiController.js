@@ -1,11 +1,5 @@
 const AIAnalysis = require('../models/AIAnalysis');
-const Question = require('../models/Question');
 const geminiService = require('../services/geminiService');
-const crypto = require('crypto');
-
-const generateCodeHash = (code, language) => {
-  return crypto.createHash('md5').update(code + language).digest('hex');
-};
 
 const analyzeCode = async (req, res) => {
   try {
@@ -29,7 +23,6 @@ const analyzeCode = async (req, res) => {
     const sampleOutput = question.sampleOutput || '';
     
 
-    const codeHash = generateCodeHash(code, language);
     let existingAnalysis = await AIAnalysis.findOne({
       questionId,
       userId,
@@ -45,7 +38,6 @@ const analyzeCode = async (req, res) => {
       });
     }
     
-
   const aiResults = await geminiService.analyzeCode(code, language, questionTitle, questionDescription, sampleInput, sampleOutput);
 
     const analysis = new AIAnalysis({

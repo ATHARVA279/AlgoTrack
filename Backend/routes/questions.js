@@ -5,9 +5,6 @@ import Question from '../models/Question';
 
 const router = express.Router();
 
-// @route   POST /api/questions
-// @desc    Create a new question
-// @access  Private
 router.post('/', async (req, res) => {
   const { title, description, difficulty, topic, sampleInput, sampleOutput, solution } = req.body;
 
@@ -38,9 +35,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// @route   GET /api/questions
-// @desc    Get all questions for the logged-in user
-// @access  Private
 router.get('/', async (req, res) => {
   try {
     const questions = await Question.find({ user: req.user._id }).sort({ createdAt: -1 });
@@ -51,9 +45,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// @route   GET /api/questions/:id
-// @desc    Get a single question by ID
-// @access  Private
 router.get('/:id', async (req, res) => {
   try {
     const question = await Question.findOne({ _id: req.params.id, user: req.user._id });
@@ -67,9 +58,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// @route   PUT /api/questions/:id
-// @desc    Update a question
-// @access  Private
 router.put('/:id', async (req, res) => {
   const { title, description, difficulty, topic, sampleInput, sampleOutput, solution } = req.body;
 
@@ -97,9 +85,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// @route   DELETE /api/questions/:id
-// @desc    Delete a question
-// @access  Private
 router.delete('/:id', async (req, res) => {
   try {
     const question = await Question.findOneAndDelete({ _id: req.params.id, user: req.user._id });

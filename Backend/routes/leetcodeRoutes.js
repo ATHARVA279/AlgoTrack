@@ -12,12 +12,6 @@ const {
 
 const router = express.Router();
 
-// Test route
-router.get("/test", (req, res) => {
-  console.log("✅ LeetCode routes are working!");
-  res.json({ message: "LeetCode routes are working!" });
-});
-
 router.post("/sync", syncLeetCodeData);
 router.post("/sync-all", syncAllLeetCodeData);
 

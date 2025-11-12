@@ -172,7 +172,6 @@ const updateLeetCodeUsername = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Check if username is already taken
     if (leetcodeUsername) {
       const existingUser = await User.findOne({ 
         leetcodeUsername, 

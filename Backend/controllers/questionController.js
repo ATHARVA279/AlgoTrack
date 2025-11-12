@@ -11,8 +11,7 @@ exports.addQuestion = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     userId = decoded.id;
 
-
-  const question = await Question.create(questionData);
+    const question = await Question.create(questionData);
 
     if (userId) {
       const updatedUser = await User.findByIdAndUpdate(

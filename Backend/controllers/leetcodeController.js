@@ -30,7 +30,6 @@ exports.syncAllLeetCodeData = async (req, res) => {
     }
 
 
-    // Get ALL solved problems, not just recent ones
     const { submissions: allSubmissions, profile } = await leetcodeService.getAllUserSolvedProblems(leetcodeUsername);
 
     if (allSubmissions.length === 0) {
@@ -40,7 +39,6 @@ exports.syncAllLeetCodeData = async (req, res) => {
       });
     }
 
-    // Update user's LeetCode profile data
     currentUser.leetcodeProfile = {
       totalSolved: profile.totalSolved,
       easySolved: profile.easySolved,
@@ -50,7 +48,6 @@ exports.syncAllLeetCodeData = async (req, res) => {
       ranking: profile.ranking
     };
 
-    // Clear existing LeetCode solved questions to avoid duplicates
     currentUser.leetcodeSolvedQuestions = [];
 
     const syncedQuestions = [];
@@ -68,7 +65,6 @@ exports.syncAllLeetCodeData = async (req, res) => {
           continue;
         }
 
-        // Store in global LeetCode questions collection
         let question = await LeetCodeQuestion.findOne({
           titleSlug: submission.titleSlug,
         });
@@ -93,7 +89,6 @@ exports.syncAllLeetCodeData = async (req, res) => {
           await question.save();
         }
 
-        // Add to user's personal solved questions list
         currentUser.leetcodeSolvedQuestions.push({
           leetcodeQuestionId: question._id,
           titleSlug: submission.titleSlug,
@@ -112,7 +107,6 @@ exports.syncAllLeetCodeData = async (req, res) => {
 
         syncedQuestions.push(question);
 
-        // Reduce delay to speed up the process
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {
         console.error(
@@ -689,29 +683,6 @@ exports.updateUserSolution = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-// Helper function to calculate streak (same as in questionController)
-function calculateStreak(solvedQuestions) {
-  const dates = solvedQuestions
-    .map((q) => new Date(q.solvedAt).toDateString())
-    .sort((a, b) => new Date(b) - new Date(a));
-
-  const uniqueDates = [...new Set(dates)];
-  let streak = 0;
-  let currentDate = new Date();
-
-  for (const dateStr of uniqueDates) {
-    const date = new Date(dateStr);
-    if (date.toDateString() === currentDate.toDateString()) {
-      streak++;
-      currentDate.setDate(currentDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-}
 
 exports.getQuestionsCount = async (req, res) => {
   try {

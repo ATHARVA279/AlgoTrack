@@ -9,10 +9,6 @@ const {
   logoutUser,
 } = require("../controllers/authController");
 
-router.get("/test", (req, res) => {
-  res.json({ message: "Auth routes are working!" });
-});
-
 router.post("/signup", signupUser);
 router.post("/login", loginUser);
 router.get("/me", getMe);

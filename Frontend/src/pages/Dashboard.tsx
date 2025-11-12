@@ -32,7 +32,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const apiUrl = `https://algotrack-vujc.onrender.com/api/questions`;
+        const apiUrl = `http://localhost:5000/api/questions`;
         const res = await fetch(apiUrl, {
           credentials: "include",
         });

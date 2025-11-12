@@ -12,7 +12,6 @@ const UserSchema = new mongoose.Schema({
       solvedAt: { type: Date, default: Date.now },
     },
   ],
-  // LeetCode specific tracking
   leetcodeProfile: {
     totalSolved: { type: Number, default: 0 },
     easySolved: { type: Number, default: 0 },
