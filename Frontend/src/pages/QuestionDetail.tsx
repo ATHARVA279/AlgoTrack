@@ -3,9 +3,58 @@ import { useParams, Link } from "react-router-dom";
 import { Code2, MessageCircle, ArrowLeft } from "../utils/icons";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from 'remark-gfm';
 import { CodeHighlighter } from "../components/CodeHighlighter";
 import { AIAnalysis } from "../components/AIAnalysis";
 import { AIAnalysisButton } from "../components/AIAnalysisButton";
+
+// Custom markdown components
+const markdownComponents = {
+  code: ({ node, inline, className, children, ...props }: any) => {
+    if (inline) {
+      return (
+        <code className="bg-cyber-black text-neon-purple px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+          {children}
+        </code>
+      );
+    }
+    return (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  },
+  strong: ({ children, ...props }: any) => (
+    <strong className="font-bold text-white" {...props}>
+      {children}
+    </strong>
+  ),
+  em: ({ children, ...props }: any) => (
+    <em className="italic text-gray-200" {...props}>
+      {children}
+    </em>
+  ),
+  p: ({ children, ...props }: any) => (
+    <p className="my-2 leading-relaxed" {...props}>
+      {children}
+    </p>
+  ),
+  ul: ({ children, ...props }: any) => (
+    <ul className="list-disc list-inside my-2 space-y-1" {...props}>
+      {children}
+    </ul>
+  ),
+  ol: ({ children, ...props }: any) => (
+    <ol className="list-decimal list-inside my-2 space-y-1" {...props}>
+      {children}
+    </ol>
+  ),
+  li: ({ children, ...props }: any) => (
+    <li className="text-gray-300 ml-4" {...props}>
+      {children}
+    </li>
+  ),
+};
 
 const difficultyColors = {
   Easy: "text-green-400",
@@ -71,21 +120,36 @@ function QuestionDetail() {
         <h1 className="text-3xl font-bold mb-6">{question.title}</h1>
 
         <div className="prose prose-invert max-w-none">
-          <ReactMarkdown>{question.description}</ReactMarkdown>
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
+            {question.description}
+          </ReactMarkdown>
         </div>
 
         <div className="mt-8 space-y-6">
           <div>
-            <h3 className="text-lg font-semibold mb-2">Sample Input:</h3>
-            <div className="cyber-card bg-cyber-darker">
-              <code className="text-gray-300">{question.sampleInput}</code>
+            <h3 className="text-lg font-semibold mb-2 flex items-center">
+              <span className="text-neon-blue mr-2">📥</span>
+              Sample Input
+            </h3>
+            <div className="bg-cyber-darker rounded-lg p-4 border border-gray-700">
+              <pre className="text-gray-300 whitespace-pre-wrap font-mono text-sm">
+                {question.sampleInput}
+              </pre>
             </div>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-2">Sample Output:</h3>
-            <div className="cyber-card bg-cyber-darker">
-              <code className="text-gray-300">{question.sampleOutput}</code>
+            <h3 className="text-lg font-semibold mb-2 flex items-center">
+              <span className="text-green-400 mr-2">📤</span>
+              Sample Output
+            </h3>
+            <div className="bg-cyber-darker rounded-lg p-4 border border-gray-700">
+              <pre className="text-gray-300 whitespace-pre-wrap font-mono text-sm">
+                {question.sampleOutput}
+              </pre>
             </div>
           </div>
         </div>
@@ -123,13 +187,18 @@ function QuestionDetail() {
               />
             </div>
 
-            <div className="cyber-card bg-gradient-to-r from-neon-purple/5 to-neon-blue/5">
+            <div className="cyber-card bg-gradient-to-r from-neon-purple/5 to-neon-blue/5 border border-neon-purple/20">
               <div className="flex items-center space-x-2 mb-4">
                 <MessageCircle className="w-5 h-5 text-neon-purple" />
                 <h3 className="text-lg font-semibold">Explanation</h3>
               </div>
               <div className="prose prose-invert max-w-none">
-                <ReactMarkdown>{question.solution.explanation}</ReactMarkdown>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={markdownComponents}
+                >
+                  {question.solution.explanation}
+                </ReactMarkdown>
               </div>
             </div>
 

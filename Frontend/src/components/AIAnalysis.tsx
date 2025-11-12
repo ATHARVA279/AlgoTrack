@@ -3,6 +3,40 @@ import { motion } from 'framer-motion';
 import { Brain, Zap, Code2, TrendingUp, CheckCircle2, AlertCircle } from '../utils/icons';
 import { CodeHighlighter } from './CodeHighlighter';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+// Custom components for ReactMarkdown to render inline code and other elements
+const markdownComponents = {
+  code: ({ node, inline, className, children, ...props }: any) => {
+    if (inline) {
+      return (
+        <code className="bg-cyber-black text-neon-purple px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+          {children}
+        </code>
+      );
+    }
+    return (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  },
+  strong: ({ children, ...props }: any) => (
+    <strong className="font-bold text-white" {...props}>
+      {children}
+    </strong>
+  ),
+  em: ({ children, ...props }: any) => (
+    <em className="italic text-gray-200" {...props}>
+      {children}
+    </em>
+  ),
+  p: ({ children, ...props }: any) => (
+    <p className="my-2 leading-relaxed" {...props}>
+      {children}
+    </p>
+  ),
+};
 
 interface LineExplanation {
   lineNumber: number;
@@ -122,8 +156,13 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
           <div className="space-y-6">
             <div>
               <h4 className="text-lg font-semibold text-white mb-3">Algorithmic Approach</h4>
-              <div className="text-gray-300 leading-relaxed">
-                <ReactMarkdown>{analysis.codeAnalysis.approach}</ReactMarkdown>
+              <div className="text-gray-300 leading-relaxed prose prose-invert max-w-none">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={markdownComponents}
+                >
+                  {analysis.codeAnalysis.approach}
+                </ReactMarkdown>
               </div>
             </div>
 
@@ -137,7 +176,15 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                   {analysis.codeAnalysis.strengths.map((strength, index) => (
                     <li key={index} className="text-gray-300 flex items-start">
                       <span className="text-green-400 mr-2">•</span>
-                      {strength}
+                      <div className="flex-1">
+                        <ReactMarkdown 
+                          className="prose prose-invert prose-sm max-w-none"
+                          remarkPlugins={[remarkGfm]}
+                          components={markdownComponents}
+                        >
+                          {strength}
+                        </ReactMarkdown>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -152,7 +199,15 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                   {analysis.codeAnalysis.improvements.map((improvement, index) => (
                     <li key={index} className="text-gray-300 flex items-start">
                       <span className="text-yellow-400 mr-2">•</span>
-                      {improvement}
+                      <div className="flex-1">
+                        <ReactMarkdown 
+                          className="prose prose-invert prose-sm max-w-none"
+                          remarkPlugins={[remarkGfm]}
+                          components={markdownComponents}
+                        >
+                          {improvement}
+                        </ReactMarkdown>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -166,7 +221,14 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                   {analysis.codeAnalysis.alternativeApproaches.map((approach, index) => (
                     <li key={index} className="text-gray-300 flex items-start">
                       <span className="text-blue-400 mr-2">•</span>
-                      <ReactMarkdown>{approach}</ReactMarkdown>
+                      <div className="flex-1 prose prose-invert prose-sm max-w-none">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={markdownComponents}
+                        >
+                          {approach}
+                        </ReactMarkdown>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -191,7 +253,14 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                         language={analysis.language}
                         customStyle={{ background: 'transparent', padding: '0.5rem' }}
                       />
-                      <p className="text-gray-300 text-sm leading-relaxed">{line.explanation}</p>
+                      <div className="text-gray-300 text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={markdownComponents}
+                        >
+                          {line.explanation}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -217,7 +286,14 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
 
             <div>
               <h5 className="text-lg font-semibold text-white mb-3">Detailed Explanation</h5>
-              <p className="text-gray-300 leading-relaxed">{analysis.bigOComplexity.explanation}</p>
+              <div className="text-gray-300 leading-relaxed prose prose-invert max-w-none">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={markdownComponents}
+                >
+                  {analysis.bigOComplexity.explanation}
+                </ReactMarkdown>
+              </div>
             </div>
           </div>
         )}
@@ -236,8 +312,13 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                           {suggestion.type}
                         </span>
                       </div>
-                      <div className="text-gray-300 mb-3">
-                        <ReactMarkdown>{suggestion.description}</ReactMarkdown>
+                      <div className="text-gray-300 mb-3 prose prose-invert prose-sm max-w-none">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={markdownComponents}
+                        >
+                          {suggestion.description}
+                        </ReactMarkdown>
                       </div>
                       {suggestion.relatedTopics.length > 0 && (
                         <div className="flex flex-wrap gap-2">

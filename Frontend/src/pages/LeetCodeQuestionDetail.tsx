@@ -143,13 +143,32 @@ public:
         }
         
         if (question.content) {
+          // Process content to preserve formatting
           const cleanContent = question.content
-            .replace(/<[^>]*>/g, ' ')
+            // Preserve formatting for better readability
+            .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+            .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+            .replace(/<code>(.*?)<\/code>/gi, '`$1`')
+            .replace(/<pre>(.*?)<\/pre>/gi, '\n```\n$1\n```\n')
+            .replace(/<p>/gi, '\n')
+            .replace(/<\/p>/gi, '\n')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<ul>/gi, '\n')
+            .replace(/<\/ul>/gi, '\n')
+            .replace(/<li>/gi, '• ')
+            .replace(/<\/li>/gi, '\n')
+            // Clean up HTML entities
             .replace(/&nbsp;/g, ' ')
             .replace(/&lt;/g, '<')
             .replace(/&gt;/g, '>')
             .replace(/&amp;/g, '&')
-            .replace(/\s+/g, ' ');
+            .replace(/&quot;/g, '"')
+            // Remove remaining tags
+            .replace(/<[^>]*>/g, '')
+            // Clean up whitespace
+            .replace(/[ \t]+/g, ' ')
+            .replace(/\n\s+\n/g, '\n\n')
+            .trim();
 
           const examplePattern = /Example\s*\d*:\s*Input:\s*([^O]+?)Output:\s*([^E\n]+?)(?=Example|Explanation|Constraints|$)/gi;
           const exampleMatch = examplePattern.exec(cleanContent);
@@ -164,18 +183,33 @@ public:
             if (inputMatch) sampleInput = inputMatch[1].trim();
             if (outputMatch) sampleOutput = outputMatch[1].trim();
           }
-          
-          sampleInput = sampleInput.replace(/^\s*s\s*=\s*/, '').trim();
-          sampleOutput = sampleOutput.replace(/^\s*(true|false)\s*/, '$1').trim();
         }
 
+        // Create better formatted description
         let description = question.content
-          .replace(/<[^>]*>/g, '')
+          // Preserve markdown formatting
+          .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+          .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+          .replace(/<code>(.*?)<\/code>/gi, '`$1`')
+          .replace(/<pre>(.*?)<\/pre>/gi, '\n```\n$1\n```\n')
+          .replace(/<p>/gi, '\n')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<ul>/gi, '\n')
+          .replace(/<\/ul>/gi, '\n')
+          .replace(/<li>/gi, '• ')
+          .replace(/<\/li>/gi, '\n')
+          .replace(/<h1>(.*?)<\/h1>/gi, '\n# $1\n')
+          .replace(/<h2>(.*?)<\/h2>/gi, '\n## $1\n')
+          .replace(/<h3>(.*?)<\/h3>/gi, '\n### $1\n')
           .replace(/&nbsp;/g, ' ')
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
           .replace(/&amp;/g, '&')
-          .replace(/\s+/g, ' ')
+          .replace(/&quot;/g, '"')
+          .replace(/<[^>]*>/g, '')
+          .replace(/[ \t]+/g, ' ')
+          .replace(/\n\s+\n/g, '\n\n')
           .trim();
 
         description = description.replace(/Example\s*\d*:[\s\S]*?(?=Constraints:|$)/gi, '').trim();
@@ -184,7 +218,7 @@ public:
 
         const questionData = {
           title: question.title,
-          description: description || `${question.title}\n\nLeetCode problem #${question.frontendQuestionId}`,
+          description: description || `# ${question.title}\n\nLeetCode problem #${question.frontendQuestionId}\n\n${question.topicTags.map(t => t.name).join(', ')}`,
           difficulty: question.difficulty,
           topic: question.topicTags[0]?.name || "Algorithms",
           sampleInput: sampleInput,
@@ -309,7 +343,11 @@ public:
           <div className="prose prose-invert max-w-none">
             <div 
               dangerouslySetInnerHTML={{ __html: question.content }}
-              className="text-gray-300 leading-relaxed"
+              className="text-gray-300 leading-relaxed leetcode-content"
+              style={{
+                fontSize: '0.95rem',
+                lineHeight: '1.7'
+              }}
             />
           </div>
 
