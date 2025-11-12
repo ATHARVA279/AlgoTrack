@@ -1,12 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink, Save, CheckCircle2, Circle } from "../utils/icons";
+import { ArrowLeft, ExternalLink, Save, CheckCircle2 } from "../utils/icons";
 import Editor from "@monaco-editor/react";
 import axios from "../utils/axiosInstance";
 import { toast } from "react-hot-toast";
-import { AIAnalysis } from "../components/AIAnalysis";
-import { AIAnalysisButton } from "../components/AIAnalysisButton";
 import { ClipLoader } from "react-spinners";
 
 interface LeetCodeQuestion {
@@ -46,8 +44,6 @@ export default function LeetCodeQuestionDetail() {
   const [code, setCode] = useState("");
   const [notes, setNotes] = useState("");
   const [isSolved, setIsSolved] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState(null);
-  const [showAiAnalysis, setShowAiAnalysis] = useState(false);
 
   const languages = [
     { value: "javascript", label: "JavaScript" },
@@ -85,25 +81,9 @@ export default function LeetCodeQuestionDetail() {
       setNotes(question.userSolution.notes || "");
       setIsSolved(question.userSolution.isSolved);
       
-      // Find latest submission for the selected language
-      const latestSubmission = question.userSolution.submissions
-        .filter(sub => sub.lang === selectedLanguage)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-      
-      if (latestSubmission && latestSubmission.code) {
-        setCode(latestSubmission.code);
-      } else {
-        // If no code for this language, check if there's any submission code at all
-        const anySubmission = question.userSolution.submissions
-          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-        
-        if (anySubmission && anySubmission.code) {
-          // Show the code from different language as reference
-          setCode(`// Code from ${anySubmission.lang} submission\n// Switch language to see original code\n\n${getDefaultCode(selectedLanguage)}`);
-        } else {
-          setCode(getDefaultCode(selectedLanguage));
-        }
-      }
+      // LeetCode API doesn't provide actual code, so we just show a template
+      // Users need to manually paste their solution from LeetCode
+      setCode(getDefaultCode(selectedLanguage));
     }
   }, [question, selectedLanguage]);
 
@@ -293,7 +273,7 @@ public:
             {question.userSolution.isSolved ? (
               <CheckCircle2 className="w-6 h-6 text-green-400" />
             ) : (
-              <Circle className="w-6 h-6 text-gray-500" />
+              <div className="w-6 h-6 rounded-full border-2 border-gray-500"></div>
             )}
             <h1 className="text-2xl font-bold">
               {question.frontendQuestionId}. {question.title}
@@ -386,16 +366,6 @@ public:
             </div>
             
             <div className="flex items-center space-x-3">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={isSolved}
-                  onChange={(e) => setIsSolved(e.target.checked)}
-                  className="rounded border-gray-600 bg-gray-800 text-neon-purple focus:ring-neon-purple"
-                />
-                <span className="text-sm">Mark as solved</span>
-              </label>
-              
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
@@ -411,6 +381,38 @@ public:
                 })}
               </select>
             </div>
+          </div>
+
+          {/* Mark as Solved - More prominent and clear */}
+          <div className="mb-4 p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+            <label className="flex items-center justify-between cursor-pointer group">
+              <div className="flex items-center space-x-3">
+                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                  isSolved 
+                    ? 'bg-green-500 border-green-500' 
+                    : 'border-gray-600 group-hover:border-gray-500'
+                }`}>
+                  {isSolved && <CheckCircle2 className="w-4 h-4 text-white" />}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-200">
+                    {isSolved ? "Marked as Solved ✓" : "Mark this problem as solved"}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {isSolved 
+                      ? "This will be saved in your practice collection" 
+                      : "Check this when you've successfully solved the problem"
+                    }
+                  </p>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={isSolved}
+                onChange={(e) => setIsSolved(e.target.checked)}
+                className="sr-only"
+              />
+            </label>
           </div>
 
           {/* Available submissions indicator */}
@@ -477,33 +479,21 @@ public:
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  <span>{isSolved && code.trim() ? "Save & Add to Collection" : "Save Solution"}</span>
+                  <span>Save Solution</span>
                 </>
               )}
             </button>
-
-            <AIAnalysisButton
-              question={{
-                _id: question?._id || '',
-                title: question?.title || '',
-                solution: {
-                  code: code,
-                  language: selectedLanguage
-                }
-              }}
-              onAnalysisComplete={(analysis) => {
-                setAiAnalysis(analysis);
-                setShowAiAnalysis(true);
-              }}
-              disabled={!code.trim()}
-            />
           </div>
 
-          {isSolved && code.trim() && (
-            <div className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <p className="text-sm text-green-400 flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>This solution will be added to your Questions collection for easy access!</span>
+          {/* Info banner about synced code from LeetCode */}
+          {question.userSolution.submissions.length > 0 && (
+            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-sm text-blue-400 flex items-start gap-2">
+                <span className="text-lg">ℹ️</span>
+                <span>
+                  <strong>Note:</strong> LeetCode's API doesn't provide the actual code from your submissions. 
+                  You can manually paste your solution from LeetCode or write a new one here to save it.
+                </span>
               </p>
             </div>
           )}
@@ -532,17 +522,6 @@ public:
             </div>
           )}
         </motion.div>
-
-        {/* AI Analysis Section */}
-        {showAiAnalysis && aiAnalysis && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <AIAnalysis analysis={aiAnalysis} />
-          </motion.div>
-        )}
       </div>
     </div>
   );

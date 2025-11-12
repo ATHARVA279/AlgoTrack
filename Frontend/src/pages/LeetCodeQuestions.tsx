@@ -43,7 +43,6 @@ export default function LeetCodeQuestions() {
   >([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
-  const [showSolvedOnly, setShowSolvedOnly] = useState(false);
   const [sortBy, setSortBy] = useState<"latest" | "questionNumber">("latest");
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -99,7 +98,6 @@ export default function LeetCodeQuestions() {
     console.log("📝 Total questions:", questions.length);
     console.log("🔎 Search query:", searchQuery);
     console.log("📊 Selected difficulty:", selectedDifficulty);
-    console.log("✅ Show solved only:", showSolvedOnly);
     console.log("🔄 Sort by:", sortBy);
 
     let filtered = questions;
@@ -116,10 +114,6 @@ export default function LeetCodeQuestions() {
 
     if (selectedDifficulty !== "All") {
       filtered = filtered.filter((q) => q.difficulty === selectedDifficulty);
-    }
-
-    if (showSolvedOnly) {
-      filtered = filtered.filter((q) => q.isSolved);
     }
 
     // Apply sorting
@@ -139,7 +133,7 @@ export default function LeetCodeQuestions() {
 
     console.log("📋 Filtered questions count:", sorted.length);
     setFilteredQuestions(sorted);
-  }, [searchQuery, selectedDifficulty, showSolvedOnly, sortBy, questions]);
+  }, [searchQuery, selectedDifficulty, sortBy, questions]);
 
   useEffect(() => {
     console.log("👤 Frontend: Current user:", user);
@@ -348,22 +342,54 @@ export default function LeetCodeQuestions() {
         className="cyber-card"
       >
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 space-y-4 md:space-y-0">
-          <div>
-            <h2 className="text-2xl font-bold">LeetCode Questions</h2>
-            <p className="text-gray-400">
-              {questions.length} synced questions • Total solved:{" "}
-              {leetcodeProfile.totalSolved} • Easy: {leetcodeProfile.easySolved}{" "}
-              • Medium: {leetcodeProfile.mediumSolved} • Hard:{" "}
-              {leetcodeProfile.hardSolved}
-              {leetcodeProfile.lastSyncAt && (
-                <span>
-                  {" "}
-                  • Last sync:{" "}
-                  {new Date(leetcodeProfile.lastSyncAt).toLocaleDateString()}
-                </span>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold mb-2">LeetCode Questions</h2>
+            
+            {/* Stats cards */}
+            <div className="flex flex-wrap gap-3">
+              <div className="bg-neon-purple/10 border border-neon-purple/30 rounded-lg px-4 py-2">
+                <p className="text-xs text-gray-400">Synced Here</p>
+                <p className="text-2xl font-bold text-neon-purple">{questions.length}</p>
+              </div>
+              
+              {leetcodeProfile.totalSolved > 0 && (
+                <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2">
+                  <p className="text-xs text-gray-400">Total on LeetCode</p>
+                  <p className="text-2xl font-bold">{leetcodeProfile.totalSolved}</p>
+                </div>
               )}
-            </p>
-
+              
+              {leetcodeProfile.totalSolved > 0 && (
+                <>
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2">
+                    <p className="text-xs text-gray-400">Easy</p>
+                    <p className="text-lg font-bold text-green-400">{leetcodeProfile.easySolved}</p>
+                  </div>
+                  
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2">
+                    <p className="text-xs text-gray-400">Medium</p>
+                    <p className="text-lg font-bold text-yellow-400">{leetcodeProfile.mediumSolved}</p>
+                  </div>
+                  
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                    <p className="text-xs text-gray-400">Hard</p>
+                    <p className="text-lg font-bold text-red-400">{leetcodeProfile.hardSolved}</p>
+                  </div>
+                </>
+              )}
+            </div>
+            
+            {leetcodeProfile.lastSyncAt && (
+              <p className="text-sm text-gray-500 mt-2">
+                Last synced: {new Date(leetcodeProfile.lastSyncAt).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            )}
           </div>
 
           <div className="flex space-x-2">
@@ -377,8 +403,22 @@ export default function LeetCodeQuestions() {
           </div>
         </div>
 
+        {/* Info banner if synced questions are less than total */}
+        {leetcodeProfile.totalSolved > 0 && questions.length < leetcodeProfile.totalSolved && (
+          <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-sm text-blue-400 flex items-start gap-2">
+              <span className="text-lg flex-shrink-0">ℹ️</span>
+              <span>
+                <strong>Note:</strong> LeetCode's API only returns recent submissions (~20 questions). 
+                Out of your {leetcodeProfile.totalSolved} total solved problems, {questions.length} are synced here. 
+                Older problems aren't available through the API. You can manually add them via "Questions" → "Add Question".
+              </span>
+            </p>
+          </div>
+        )}
+
         {/* Filters */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-4 md:space-y-0 md:space-x-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-4 md:space-y-0 md:space-x-4 mt-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -412,16 +452,6 @@ export default function LeetCodeQuestions() {
             <option value="latest">Latest Solved</option>
             <option value="questionNumber">Question Number</option>
           </select>
-
-          <label className="flex items-center space-x-2 text-gray-300">
-            <input
-              type="checkbox"
-              checked={showSolvedOnly}
-              onChange={(e) => setShowSolvedOnly(e.target.checked)}
-              className="rounded border-gray-600 bg-gray-800 text-neon-purple focus:ring-neon-purple"
-            />
-            <span>Solved only</span>
-          </label>
         </div>
       </motion.div>
 
@@ -536,27 +566,48 @@ export default function LeetCodeQuestions() {
         ))}
 
         {filteredQuestions.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-lg mb-4">
-              {questions.length === 0
-                ? "No LeetCode questions synced yet!"
-                : "No questions match your filters."}
-            </p>
-            {questions.length === 0 && (
-              <div className="space-y-4">
-                <p className="text-gray-500">
-                  Your LeetCode profile shows {leetcodeProfile.totalSolved}{" "}
-                  solved problems.
-                  <br />
-                  Use "Sync LeetCode" to import recent ones, or go to "Questions" → "Add Question" for older ones!
+          <div className="cyber-card text-center py-12">
+            {questions.length === 0 ? (
+              <>
+                <div className="text-6xl mb-4">🎯</div>
+                <h3 className="text-xl font-bold mb-2">No LeetCode Questions Synced Yet</h3>
+                <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                  {leetcodeProfile.totalSolved > 0 ? (
+                    <>
+                      You have {leetcodeProfile.totalSolved} solved problems on LeetCode.
+                      Click the button below to sync your recent submissions!
+                    </>
+                  ) : (
+                    <>
+                      Connect your LeetCode account to track your progress and solutions in one place.
+                    </>
+                  )}
                 </p>
                 <button
                   onClick={() => setShowSyncModal(true)}
-                  className="cyber-button bg-neon-purple/20 border-neon-purple"
+                  className="cyber-button bg-neon-purple/20 border-neon-purple inline-flex items-center space-x-2"
                 >
-                  🚀 Sync Recent Questions
+                  <RefreshCw className="w-5 h-5" />
+                  <span>Sync from LeetCode</span>
                 </button>
-              </div>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-bold mb-2">No Questions Match Your Filters</h3>
+                <p className="text-gray-400 mb-4">
+                  Try adjusting your search or difficulty filter to see more results.
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedDifficulty("All");
+                  }}
+                  className="cyber-button"
+                >
+                  Clear Filters
+                </button>
+              </>
             )}
           </div>
         )}
