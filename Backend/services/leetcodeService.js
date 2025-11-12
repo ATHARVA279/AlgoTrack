@@ -157,11 +157,23 @@ class LeetCodeService {
         throw new Error("User not found");
       }
 
-      const totalSolved = userProfile.submitStats.acSubmissionNum.reduce(
-        (sum, stat) => sum + stat.count,
-        0
-      );
-      console.log(`📊 User has solved ${totalSolved} problems total`);
+      // Get the count field which represents actual unique problems solved
+      // The submissions field can include duplicates/retries
+      const easySolved = userProfile.submitStats.acSubmissionNum.find(
+        (s) => s.difficulty === "Easy"
+      )?.count || 0;
+      
+      const mediumSolved = userProfile.submitStats.acSubmissionNum.find(
+        (s) => s.difficulty === "Medium"
+      )?.count || 0;
+      
+      const hardSolved = userProfile.submitStats.acSubmissionNum.find(
+        (s) => s.difficulty === "Hard"
+      )?.count || 0;
+      
+      const totalSolved = easySolved + mediumSolved + hardSolved;
+      
+      console.log(`📊 User profile stats - Easy: ${easySolved}, Medium: ${mediumSolved}, Hard: ${hardSolved}, Total: ${totalSolved}`);
 
       const allSubmissions = [];
       const seenTitleSlugs = new Set();
@@ -230,18 +242,9 @@ class LeetCodeService {
         profile: {
           totalSolved,
           foundSubmissions: allSubmissions.length,
-          easySolved:
-            userProfile.submitStats.acSubmissionNum.find(
-              (s) => s.difficulty === "Easy"
-            )?.count || 0,
-          mediumSolved:
-            userProfile.submitStats.acSubmissionNum.find(
-              (s) => s.difficulty === "Medium"
-            )?.count || 0,
-          hardSolved:
-            userProfile.submitStats.acSubmissionNum.find(
-              (s) => s.difficulty === "Hard"
-            )?.count || 0,
+          easySolved,
+          mediumSolved,
+          hardSolved,
           ranking: userProfile.profile.ranking,
           apiLimitation: allSubmissions.length < totalSolved
         },

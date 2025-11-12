@@ -343,44 +343,56 @@ export default function LeetCodeQuestions() {
       >
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 space-y-4 md:space-y-0">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold mb-2">LeetCode Questions</h2>
-            
-            {/* Stats cards */}
-            <div className="flex flex-wrap gap-3">
-              <div className="bg-neon-purple/10 border border-neon-purple/30 rounded-lg px-4 py-2">
-                <p className="text-xs text-gray-400">Synced Here</p>
-                <p className="text-2xl font-bold text-neon-purple">{questions.length}</p>
-              </div>
-              
-              {leetcodeProfile.totalSolved > 0 && (
-                <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2">
-                  <p className="text-xs text-gray-400">Total on LeetCode</p>
-                  <p className="text-2xl font-bold">{leetcodeProfile.totalSolved}</p>
-                </div>
-              )}
-              
-              {leetcodeProfile.totalSolved > 0 && (
-                <>
-                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2">
-                    <p className="text-xs text-gray-400">Easy</p>
-                    <p className="text-lg font-bold text-green-400">{leetcodeProfile.easySolved}</p>
-                  </div>
-                  
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2">
-                    <p className="text-xs text-gray-400">Medium</p>
-                    <p className="text-lg font-bold text-yellow-400">{leetcodeProfile.mediumSolved}</p>
-                  </div>
-                  
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
-                    <p className="text-xs text-gray-400">Hard</p>
-                    <p className="text-lg font-bold text-red-400">{leetcodeProfile.hardSolved}</p>
-                  </div>
-                </>
-              )}
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-2xl font-bold">LeetCode Questions</h2>
+              <button
+                onClick={() => setShowSyncModal(true)}
+                className="cyber-button flex items-center space-x-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                <span>Sync LeetCode</span>
+              </button>
             </div>
             
+            {/* Stats Grid - More Modular */}
+            {leetcodeProfile.totalSolved > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-gradient-to-br from-neon-purple/20 to-neon-purple/5 border border-neon-purple/30 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-1">Total Solved</p>
+                  <p className="text-3xl font-bold text-neon-purple">{leetcodeProfile.totalSolved}</p>
+                  <p className="text-xs text-gray-500 mt-1">{questions.length} synced</p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-1">Easy</p>
+                  <p className="text-3xl font-bold text-green-400">{leetcodeProfile.easySolved}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {questions.filter(q => q.difficulty === 'Easy').length} here
+                  </p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-1">Medium</p>
+                  <p className="text-3xl font-bold text-yellow-400">{leetcodeProfile.mediumSolved}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {questions.filter(q => q.difficulty === 'Medium').length} here
+                  </p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-1">Hard</p>
+                  <p className="text-3xl font-bold text-red-400">{leetcodeProfile.hardSolved}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {questions.filter(q => q.difficulty === 'Hard').length} here
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-400">{questions.length} synced question{questions.length !== 1 ? 's' : ''}</p>
+            )}
+            
             {leetcodeProfile.lastSyncAt && (
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-500 mt-3">
                 Last synced: {new Date(leetcodeProfile.lastSyncAt).toLocaleDateString('en-US', { 
                   month: 'short', 
                   day: 'numeric',
@@ -390,16 +402,6 @@ export default function LeetCodeQuestions() {
                 })}
               </p>
             )}
-          </div>
-
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setShowSyncModal(true)}
-              className="cyber-button flex items-center space-x-2"
-            >
-              <RefreshCw className="w-5 h-5" />
-              <span>Sync LeetCode</span>
-            </button>
           </div>
         </div>
 
