@@ -6,32 +6,22 @@ const {
   getLeetCodeQuestionById,
   updateUserSolution,
   addManualQuestion,
-  populatePopularQuestions,
   getQuestionsCount
 } = require("../controllers/leetcodeController");
 
 const router = express.Router();
 
+// Sync routes
 router.post("/sync", syncLeetCodeData);
 router.post("/sync-all", syncAllLeetCodeData);
 
-router.post("/populate", populatePopularQuestions);
-
+// Question routes
 router.get("/questions/count", getQuestionsCount);
-
-router.get("/questions", (req, res, next) => {
-  console.log("🚀 Route: GET /api/leetcode/questions hit");
-  next();
-}, getLeetCodeQuestions);
-
+router.get("/questions", getLeetCodeQuestions);
 router.get("/questions/:id", getLeetCodeQuestionById);
 
-router.put("/questions/:id/solution", (req, res, next) => {
-  console.log("🚀 Route: PUT /api/leetcode/questions/:id/solution hit");
-  console.log("📝 Request body:", req.body);
-  next();
-}, updateUserSolution);
-
+// Solution and manual question routes
+router.put("/questions/:id/solution", updateUserSolution);
 router.post("/questions/add-manual", addManualQuestion);
 
 module.exports = router;

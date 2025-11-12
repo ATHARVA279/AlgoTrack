@@ -345,26 +345,6 @@ export default function LeetCodeQuestions() {
 
           <div className="flex space-x-2">
             <button
-              onClick={async () => {
-                try {
-                  console.log("🔄 Populating popular questions...");
-                  const response = await axios.post("/api/leetcode/populate");
-                  console.log("✅ Populate response:", response.data);
-                  toast.success(response.data.message);
-                  await fetchLeetCodeQuestions();
-                } catch (error) {
-                  console.error("❌ Populate failed:", error);
-                  toast.error("Failed to populate questions");
-                }
-              }}
-              className="cyber-button"
-            >
-              {questions.length === 0
-                ? "Load Sample Questions"
-                : "Add More Questions"}
-            </button>
-
-            <button
               onClick={() => setShowSyncModal(true)}
               className="cyber-button flex items-center space-x-2"
             >
