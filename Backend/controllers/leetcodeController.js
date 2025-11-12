@@ -117,10 +117,10 @@ exports.syncAllLeetCodeData = async (req, res) => {
       }
     }
 
-    // Update user's LeetCode username and save all data
     currentUser.leetcodeUsername = leetcodeUsername;
     await currentUser.save();
     console.log("✅ Backend: Updated user LeetCode data");
+    console.log("📊 Backend: User now has", currentUser.leetcodeSolvedQuestions.length, "synced questions in DB");
 
     console.log(
       `✅ Backend: COMPREHENSIVE sync completed. Synced ${syncedQuestions.length} questions`
@@ -292,6 +292,7 @@ exports.getLeetCodeQuestions = async (req, res) => {
     }
 
     console.log("📊 Backend: User's solved questions:", user.leetcodeSolvedQuestions?.length || 0);
+    console.log("🔍 Backend: Raw leetcodeSolvedQuestions array:", JSON.stringify(user.leetcodeSolvedQuestions?.slice(0, 2), null, 2));
 
     // If user has no synced questions, return empty array with helpful message
     if (!user.leetcodeSolvedQuestions || user.leetcodeSolvedQuestions.length === 0) {
@@ -314,6 +315,11 @@ exports.getLeetCodeQuestions = async (req, res) => {
     const formattedQuestions = user.leetcodeSolvedQuestions.map((solvedQ) => {
       const questionDetails = solvedQ.leetcodeQuestionId;
       
+      // Get the most recent submission for preview
+      const latestSubmission = solvedQ.submissions && solvedQ.submissions.length > 0
+        ? solvedQ.submissions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0]
+        : null;
+      
       return {
         _id: questionDetails?._id || solvedQ.leetcodeQuestionId,
         questionId: questionDetails?.questionId,
@@ -326,6 +332,11 @@ exports.getLeetCodeQuestions = async (req, res) => {
         isSolved: true, // All questions in this list are solved
         lastSolvedAt: solvedQ.solvedAt,
         submissionCount: solvedQ.submissions?.length || 0,
+        latestSubmission: latestSubmission ? {
+          lang: latestSubmission.lang,
+          timestamp: latestSubmission.timestamp,
+          statusDisplay: latestSubmission.statusDisplay,
+        } : null,
         notes: solvedQ.notes || "",
         isFavorite: solvedQ.isFavorite || false,
         content: questionDetails?.content,
@@ -333,12 +344,11 @@ exports.getLeetCodeQuestions = async (req, res) => {
       };
     });
 
-    // Sort by question number if available, otherwise by solved date
+    // Sort by latest solved date (newest first)
     formattedQuestions.sort((a, b) => {
-      if (a.frontendQuestionId && b.frontendQuestionId) {
-        return parseInt(a.frontendQuestionId) - parseInt(b.frontendQuestionId);
-      }
-      return new Date(b.lastSolvedAt) - new Date(a.lastSolvedAt);
+      const dateA = new Date(a.lastSolvedAt);
+      const dateB = new Date(b.lastSolvedAt);
+      return dateB - dateA;
     });
 
     console.log("✅ Backend: Returning user's solved questions:", formattedQuestions.length);
@@ -377,25 +387,41 @@ exports.getLeetCodeQuestionById = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
+    // Get user with their solved question data
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Find the question in the LeetCodeQuestion collection
     const question = await LeetCodeQuestion.findById(id);
     if (!question) {
       return res.status(404).json({ message: "Question not found" });
     }
 
-    const userSolution = question.userSolutions.find(
-      (sol) => sol.userId.toString() === userId
+    // Find the user's solved data for this question
+    const userSolvedData = user.leetcodeSolvedQuestions.find(
+      (solvedQ) => solvedQ.leetcodeQuestionId.toString() === id
     );
 
     const response = {
       ...question.toObject(),
-      userSolution: userSolution || {
+      userSolution: userSolvedData ? {
+        isSolved: true,
+        submissions: userSolvedData.submissions || [],
+        notes: userSolvedData.notes || "",
+        isFavorite: userSolvedData.isFavorite || false,
+        lastSolvedAt: userSolvedData.solvedAt,
+      } : {
         isSolved: false,
         submissions: [],
         notes: "",
+        isFavorite: false,
+        lastSolvedAt: null,
       },
     };
 
-    console.log("✅ Fetched question details for:", question.title, "User solution exists:", !!userSolution);
+    console.log("✅ Fetched question details for:", question.title, "User has solved:", !!userSolvedData);
 
     res.json(response);
   } catch (error) {

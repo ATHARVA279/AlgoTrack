@@ -31,6 +31,8 @@ interface LeetCodeQuestion {
       statusDisplay: string;
     }>;
     notes: string;
+    isFavorite?: boolean;
+    lastSolvedAt?: string;
   };
 }
 
@@ -83,14 +85,24 @@ export default function LeetCodeQuestionDetail() {
       setNotes(question.userSolution.notes || "");
       setIsSolved(question.userSolution.isSolved);
       
+      // Find latest submission for the selected language
       const latestSubmission = question.userSolution.submissions
         .filter(sub => sub.lang === selectedLanguage)
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
       
-      if (latestSubmission) {
-        setCode(latestSubmission.code || "");
+      if (latestSubmission && latestSubmission.code) {
+        setCode(latestSubmission.code);
       } else {
-        setCode(getDefaultCode(selectedLanguage));
+        // If no code for this language, check if there's any submission code at all
+        const anySubmission = question.userSolution.submissions
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+        
+        if (anySubmission && anySubmission.code) {
+          // Show the code from different language as reference
+          setCode(`// Code from ${anySubmission.lang} submission\n// Switch language to see original code\n\n${getDefaultCode(selectedLanguage)}`);
+        } else {
+          setCode(getDefaultCode(selectedLanguage));
+        }
       }
     }
   }, [question, selectedLanguage]);
@@ -237,7 +249,7 @@ public:
       }
       
       await fetchQuestionDetails();
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Error saving solution:", error);
       const errorMessage = error.response?.data?.message || error.message || "Failed to save solution";
       toast.error(errorMessage);
@@ -361,7 +373,17 @@ public:
           className="cyber-card"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Your Solution</h3>
+            <div>
+              <h3 className="text-lg font-semibold">Your Solution</h3>
+              {question.userSolution.submissions && question.userSolution.submissions.length > 0 && (
+                <p className="text-sm text-gray-400 mt-1">
+                  {question.userSolution.submissions.length} submission{question.userSolution.submissions.length !== 1 ? 's' : ''} from LeetCode
+                  {question.userSolution.lastSolvedAt && (
+                    <> • Last: {new Date(question.userSolution.lastSolvedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
+                  )}
+                </p>
+              )}
+            </div>
             
             <div className="flex items-center space-x-3">
               <label className="flex items-center space-x-2">
@@ -379,14 +401,39 @@ public:
                 onChange={(e) => setSelectedLanguage(e.target.value)}
                 className="cyber-input text-sm"
               >
-                {languages.map((lang) => (
-                  <option key={lang.value} value={lang.value}>
-                    {lang.label}
-                  </option>
-                ))}
+                {languages.map((lang) => {
+                  const hasSubmission = question.userSolution.submissions?.some(sub => sub.lang === lang.value);
+                  return (
+                    <option key={lang.value} value={lang.value}>
+                      {lang.label} {hasSubmission ? '✓' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
+
+          {/* Available submissions indicator */}
+          {question.userSolution.submissions && question.userSolution.submissions.length > 0 && (
+            <div className="mb-3 p-2 bg-neon-purple/10 border border-neon-purple/30 rounded-lg">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-neon-purple font-medium">Available in:</span>
+                {Array.from(new Set(question.userSolution.submissions.map(s => s.lang))).map(lang => (
+                  <span 
+                    key={lang}
+                    className={`px-2 py-0.5 rounded ${
+                      lang === selectedLanguage 
+                        ? 'bg-neon-purple text-white' 
+                        : 'bg-gray-700 text-gray-300 cursor-pointer hover:bg-gray-600'
+                    }`}
+                    onClick={() => setSelectedLanguage(lang)}
+                  >
+                    {lang}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mb-4">
             <Editor

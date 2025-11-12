@@ -26,7 +26,13 @@ interface LeetCodeQuestion {
   isSolved: boolean;
   lastSolvedAt?: string;
   submissionCount: number;
+  latestSubmission?: {
+    lang: string;
+    timestamp: string;
+    statusDisplay: string;
+  };
   notes: string;
+  isFavorite?: boolean;
 }
 
 export default function LeetCodeQuestions() {
@@ -38,6 +44,7 @@ export default function LeetCodeQuestions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   const [showSolvedOnly, setShowSolvedOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<"latest" | "questionNumber">("latest");
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
@@ -93,6 +100,7 @@ export default function LeetCodeQuestions() {
     console.log("🔎 Search query:", searchQuery);
     console.log("📊 Selected difficulty:", selectedDifficulty);
     console.log("✅ Show solved only:", showSolvedOnly);
+    console.log("🔄 Sort by:", sortBy);
 
     let filtered = questions;
 
@@ -114,9 +122,24 @@ export default function LeetCodeQuestions() {
       filtered = filtered.filter((q) => q.isSolved);
     }
 
-    console.log("📋 Filtered questions count:", filtered.length);
-    setFilteredQuestions(filtered);
-  }, [searchQuery, selectedDifficulty, showSolvedOnly, questions]);
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortBy === "latest") {
+        // Sort by latest solved date (newest first)
+        const dateA = a.lastSolvedAt ? new Date(a.lastSolvedAt).getTime() : 0;
+        const dateB = b.lastSolvedAt ? new Date(b.lastSolvedAt).getTime() : 0;
+        return dateB - dateA;
+      } else {
+        // Sort by question number
+        const numA = parseInt(a.frontendQuestionId) || 0;
+        const numB = parseInt(b.frontendQuestionId) || 0;
+        return numA - numB;
+      }
+    });
+
+    console.log("📋 Filtered questions count:", sorted.length);
+    setFilteredQuestions(sorted);
+  }, [searchQuery, selectedDifficulty, showSolvedOnly, sortBy, questions]);
 
   useEffect(() => {
     console.log("👤 Frontend: Current user:", user);
@@ -180,7 +203,7 @@ export default function LeetCodeQuestions() {
           typeof error.response === "object" &&
           "data" in error.response
         ) {
-          const responseData = error.response.data as unknown;
+          const responseData = error.response.data as any;
           errorMessage = responseData?.message || errorMessage;
         }
       }
@@ -381,6 +404,15 @@ export default function LeetCodeQuestions() {
             </select>
           </div>
 
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as "latest" | "questionNumber")}
+            className="cyber-input appearance-none pr-8"
+          >
+            <option value="latest">Latest Solved</option>
+            <option value="questionNumber">Question Number</option>
+          </select>
+
           <label className="flex items-center space-x-2 text-gray-300">
             <input
               type="checkbox"
@@ -400,13 +432,14 @@ export default function LeetCodeQuestions() {
         className="space-y-4"
       >
         {filteredQuestions.map((question) => (
-          <div
+          <Link
             key={question._id}
-            className="cyber-card hover:border-neon-purple/40 transition-colors p-4"
+            to={question._id ? `/leetcode-question/${question._id}` : '#'}
+            className="cyber-card hover:border-neon-purple/40 transition-all p-4 block group"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 flex-1">
-                <div className="flex-shrink-0">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start space-x-4 flex-1 min-w-0">
+                <div className="flex-shrink-0 mt-1">
                   {question.isSolved ? (
                     <CheckCircle2 className="w-6 h-6 text-green-400" />
                   ) : (
@@ -414,24 +447,25 @@ export default function LeetCodeQuestions() {
                   )}
                 </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <h3 className="text-lg font-semibold group-hover:text-neon-purple transition-colors">
                       {question.frontendQuestionId}. {question.title}
                     </h3>
                     <a
                       href={`https://leetcode.com/problems/${question.titleSlug}/`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-neon-purple transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-gray-400 hover:text-neon-purple transition-colors flex-shrink-0"
                     >
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>
 
-                  <div className="flex items-center space-x-3 text-sm">
+                  <div className="flex items-center flex-wrap gap-2 text-sm mb-3">
                     <span
-                      className={`px-3 py-1 rounded-full ${
+                      className={`px-3 py-1 rounded-full font-medium ${
                         difficultyColors[question.difficulty]
                       }`}
                     >
@@ -441,30 +475,51 @@ export default function LeetCodeQuestions() {
                     {question.topicTags.slice(0, 3).map((tag) => (
                       <span
                         key={tag.slug}
-                        className="bg-neon-blue/10 text-neon-blue px-2 py-1 rounded-full"
+                        className="bg-neon-blue/10 text-neon-blue px-2 py-1 rounded-full text-xs"
                       >
                         {tag.name}
                       </span>
                     ))}
 
                     {question.topicTags.length > 3 && (
-                      <span className="text-gray-400">
+                      <span className="text-gray-400 text-xs">
                         +{question.topicTags.length - 3} more
                       </span>
                     )}
                   </div>
 
+                  {/* Enhanced solved info with latest submission details */}
                   {question.isSolved && (
-                    <div className="mt-2 text-sm text-gray-400">
-                      <span>
-                        Solved • {question.submissionCount} submission(s)
+                    <div className="flex items-center gap-4 text-sm text-gray-400 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                        Solved
                       </span>
+                      
                       {question.lastSolvedAt && (
                         <span>
-                          {" "}
-                          •{" "}
-                          {new Date(question.lastSolvedAt).toLocaleDateString()}
+                          {new Date(question.lastSolvedAt).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
                         </span>
+                      )}
+                      
+                      {question.submissionCount > 0 && (
+                        <span className="bg-gray-800/50 px-2 py-0.5 rounded">
+                          {question.submissionCount} submission{question.submissionCount !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      
+                      {question.latestSubmission && (
+                        <span className="bg-neon-purple/10 text-neon-purple px-2 py-0.5 rounded">
+                          {question.latestSubmission.lang}
+                        </span>
+                      )}
+                      
+                      {question.notes && (
+                        <span className="text-yellow-400">📝 Has notes</span>
                       )}
                     </div>
                   )}
@@ -472,16 +527,12 @@ export default function LeetCodeQuestions() {
               </div>
 
               <div className="flex-shrink-0">
-                <Link
-                  to={question._id ? `/leetcode-question/${question._id}` : '#'}
-                  onClick={(e) => { if (!question._id) { e.preventDefault(); } }}
-                  className="cyber-button"
-                >
-                  {question.isSolved ? "View Solution" : "Solve"}
-                </Link>
+                <div className="cyber-button group-hover:bg-neon-purple/20 group-hover:border-neon-purple transition-all">
+                  {question.isSolved ? "View" : "Solve"}
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
 
         {filteredQuestions.length === 0 && (
