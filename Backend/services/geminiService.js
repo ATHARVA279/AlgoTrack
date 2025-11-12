@@ -2,8 +2,11 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 class GeminiService {
   constructor() {
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('❌ GEMINI_API_KEY is not set in environment variables');
+    }
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Changed from gemini-2.5-flash
   }
 
   async analyzeCode(
@@ -15,6 +18,10 @@ class GeminiService {
     sampleOutput = ""
   ) {
     try {
+      console.log('🔄 Starting AI analysis...');
+      console.log('📝 Code length:', code.length);
+      console.log('💻 Language:', language);
+      
       const prompt = this.buildAnalysisPrompt(
         code,
         language,
@@ -23,13 +30,31 @@ class GeminiService {
         sampleInput,
         sampleOutput
       );
+      
+      console.log('📤 Sending request to Gemini API...');
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
+      
+      console.log('📥 Received response from Gemini API');
+      console.log('📊 Response length:', text.length);
+      
       const parsed = this.parseAnalysisResponse(text, code);
+      console.log('✅ Successfully parsed AI analysis');
+      
       return parsed;
     } catch (error) {
-      console.error("Gemini API Error:", error);
+      console.error("❌ Gemini API Error:", error.message);
+      console.error("❌ Error details:", error);
+      
+      if (error.message?.includes('API key')) {
+        console.error('❌ Invalid API key. Please check your GEMINI_API_KEY in .env file');
+      } else if (error.message?.includes('quota')) {
+        console.error('❌ API quota exceeded. Please check your Google AI Studio quota');
+      } else if (error.message?.includes('model')) {
+        console.error('❌ Invalid model name. Check if gemini-1.5-flash is available');
+      }
+      
       return this.getFallbackAnalysis(code);
     }
   }

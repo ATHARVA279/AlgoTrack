@@ -163,14 +163,12 @@ class LeetCodeService {
         throw new Error("User not found");
       }
 
-      // Get the count field which represents actual unique problems solved
       const acStats = userProfile.submitStatsGlobal.acSubmissionNum;
       
       const easySolved = acStats.find(s => s.difficulty === "Easy")?.count || 0;
       const mediumSolved = acStats.find(s => s.difficulty === "Medium")?.count || 0;
       const hardSolved = acStats.find(s => s.difficulty === "Hard")?.count || 0;
       
-      // Simply add them up - no division or manipulation
       const totalSolved = easySolved + mediumSolved + hardSolved;
       
       console.log(`📊 User profile stats - Easy: ${easySolved}, Medium: ${mediumSolved}, Hard: ${hardSolved}, Total: ${totalSolved}`);
@@ -180,7 +178,6 @@ class LeetCodeService {
       
       console.log("🔄 Attempting AGGRESSIVE fetch strategies...");
       
-      // Strategy 1: Maximum limit attempts
       const limits = [500, 300, 200, 150, 100];
       for (const limit of limits) {
         try {

@@ -3,11 +3,13 @@ const geminiService = require('../services/geminiService');
 
 const analyzeCode = async (req, res) => {
   try {
+    console.log('🔄 AI Analysis request received');
     
     const { question } = req.body;
     const userId = req.user.id;
 
-  if (!question || !question._id || !question.solution || !question.solution.code || !question.solution.language) {
+    if (!question || !question._id || !question.solution || !question.solution.code || !question.solution.language) {
+      console.log('❌ Invalid request - missing required fields');
       return res.status(400).json({
         success: false,
         message: 'Question object with ID, solution code, and language is required'
@@ -22,14 +24,19 @@ const analyzeCode = async (req, res) => {
     const sampleInput = question.sampleInput || '';
     const sampleOutput = question.sampleOutput || '';
     
+    console.log('📝 Analyzing code for question:', questionTitle);
+    console.log('💻 Language:', language);
+    console.log('👤 User ID:', userId);
 
+    // Check for existing analysis
     let existingAnalysis = await AIAnalysis.findOne({
       questionId,
       userId,
       code: code.trim()
     });
 
-  if (existingAnalysis) {
+    if (existingAnalysis) {
+      console.log('✅ Found existing analysis in cache');
       return res.status(200).json({
         success: true,
         message: 'Analysis retrieved from cache',
@@ -38,8 +45,17 @@ const analyzeCode = async (req, res) => {
       });
     }
     
-  const aiResults = await geminiService.analyzeCode(code, language, questionTitle, questionDescription, sampleInput, sampleOutput);
+    console.log('🔄 Calling Gemini AI service...');
+    const aiResults = await geminiService.analyzeCode(
+      code, 
+      language, 
+      questionTitle, 
+      questionDescription, 
+      sampleInput, 
+      sampleOutput
+    );
 
+    console.log('✅ AI analysis completed, saving to database...');
     const analysis = new AIAnalysis({
       questionId,
       userId,
@@ -48,7 +64,8 @@ const analyzeCode = async (req, res) => {
       ...aiResults
     });
     
-  await analysis.save();
+    await analysis.save();
+    console.log('✅ Analysis saved successfully');
 
     res.status(200).json({
       success: true,
@@ -58,11 +75,25 @@ const analyzeCode = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('AI Analysis Error:', error);
-    console.error('Error stack:', error.stack);
+    console.error('❌ AI Analysis Error:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    
+    // Provide more specific error messages
+    let userMessage = 'Failed to analyze code';
+    
+    if (error.message?.includes('API key')) {
+      userMessage = 'AI service configuration error. Please contact support.';
+    } else if (error.message?.includes('quota')) {
+      userMessage = 'AI service quota exceeded. Please try again later.';
+    } else if (error.message?.includes('timeout')) {
+      userMessage = 'Analysis request timed out. Please try again.';
+    } else if (error.name === 'ValidationError') {
+      userMessage = 'Invalid code format. Please check your code.';
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Failed to analyze code',
+      message: userMessage,
       error: error.message,
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });

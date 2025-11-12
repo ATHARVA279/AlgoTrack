@@ -25,29 +25,64 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
     }
 
     setIsAnalyzing(true);
+    const loadingToast = toast.loading('Analyzing your code with AI...');
     
     try {
+      console.log('🔄 Sending AI analysis request...');
+      console.log('📝 Question:', question.title || question._id);
+      
       const response = await axios.post('/api/ai/analyze', {
         question
+      }, {
+        timeout: 60000 // 60 second timeout
       });
+
+      console.log('✅ AI analysis response:', response.data);
 
       if (response.data.success) {
         const { analysis, fromCache } = response.data;
         
+        toast.dismiss(loadingToast);
+        
         if (fromCache) {
-          toast.success('Analysis loaded from cache!');
+          toast.success('Analysis loaded from cache! 🎯');
         } else {
-          toast.success('AI analysis completed!');
+          toast.success('AI analysis completed! 🚀');
         }
         
         onAnalysisComplete(analysis);
       } else {
-        toast.error('Failed to analyze code');
+        toast.dismiss(loadingToast);
+        toast.error(response.data.message || 'Failed to analyze code');
       }
     } catch (error: any) {
-      console.error('AI Analysis Error:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to analyze code';
+      console.error('❌ AI Analysis Error:', error);
+      toast.dismiss(loadingToast);
+      
+      let errorMessage = 'Failed to analyze code';
+      
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = 'Request timed out. The AI is taking longer than expected. Please try again.';
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.message || 'Invalid request. Please check your code.';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error.response?.status === 500) {
+        errorMessage = error.response?.data?.message || 'AI service error. Please try again later.';
+      } else if (error.message?.includes('Network Error')) {
+        errorMessage = 'Network error. Please check your connection.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       toast.error(errorMessage);
+      
+      // Log additional details for debugging
+      console.log('Error details:', {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        error: error.response?.data?.error
+      });
     } finally {
       setIsAnalyzing(false);
     }
