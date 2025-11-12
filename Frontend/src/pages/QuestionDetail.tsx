@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import { CodeHighlighter } from "../components/CodeHighlighter";
 import { AIAnalysis } from "../components/AIAnalysis";
 import { AIAnalysisButton } from "../components/AIAnalysisButton";
+import { AIAnalysisError } from "../components/AIAnalysisError";
 
 // Custom markdown components
 const markdownComponents = {
@@ -68,6 +69,7 @@ function QuestionDetail() {
   const [loading, setLoading] = useState(true);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [showAiAnalysis, setShowAiAnalysis] = useState(false);
+  const [analysisError, setAnalysisError] = useState(false);
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -210,12 +212,31 @@ function QuestionDetail() {
                 onAnalysisComplete={(analysis) => {
                   setAiAnalysis(analysis);
                   setShowAiAnalysis(true);
+                  setAnalysisError(false);
+                }}
+                onAnalysisError={() => {
+                  setShowAiAnalysis(false);
+                  setAiAnalysis(null);
+                  setAnalysisError(true);
                 }}
               />
             </div>
 
-            {showAiAnalysis && aiAnalysis && (
+            {showAiAnalysis && aiAnalysis && !analysisError && (
               <AIAnalysis analysis={aiAnalysis} />
+            )}
+
+            {analysisError && (
+              <AIAnalysisError 
+                onRetry={() => {
+                  setAnalysisError(false);
+                  // Trigger the analyze button programmatically by simulating a click
+                  const analyzeButton = document.querySelector('[data-ai-analyze-button]');
+                  if (analyzeButton) {
+                    (analyzeButton as HTMLButtonElement).click();
+                  }
+                }}
+              />
             )}
           </div>
         </motion.div>

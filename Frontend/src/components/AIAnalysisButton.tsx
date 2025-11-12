@@ -8,12 +8,14 @@ import { ClipLoader } from 'react-spinners';
 interface AIAnalysisButtonProps {
   question: any;
   onAnalysisComplete: (analysis: any) => void;
+  onAnalysisError?: () => void;
   disabled?: boolean;
 }
 
 export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
   question,
   onAnalysisComplete,
+  onAnalysisError,
   disabled = false
 }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -49,6 +51,9 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
       } else {
         toast.dismiss(loadingToast);
         toast.error(response.data.message || 'Failed to analyze code');
+        if (onAnalysisError) {
+          onAnalysisError();
+        }
       }
     } catch (error: any) {
       toast.dismiss(loadingToast);
@@ -70,6 +75,10 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
       }
       
       toast.error(errorMessage);
+      
+      if (onAnalysisError) {
+        onAnalysisError();
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -77,6 +86,7 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
 
   return (
     <motion.button
+      data-ai-analyze-button
       onClick={handleAnalyze}
       disabled={disabled || isAnalyzing || !(question?.solution?.code?.trim())}
       whileHover={{ scale: disabled || isAnalyzing ? 1 : 1.02 }}
