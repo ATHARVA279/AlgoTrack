@@ -7,6 +7,7 @@ import axios from "../utils/axiosInstance";
 import { toast } from "react-hot-toast";
 import { AIAnalysis } from "../components/AIAnalysis";
 import { AIAnalysisButton } from "../components/AIAnalysisButton";
+import { ClipLoader } from "react-spinners";
 
 interface LeetCodeQuestion {
   _id: string;
@@ -423,7 +424,7 @@ public:
             >
               {saving ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  <ClipLoader color="#ffffff" size={16} />
                   <span>Saving...</span>
                 </>
               ) : (

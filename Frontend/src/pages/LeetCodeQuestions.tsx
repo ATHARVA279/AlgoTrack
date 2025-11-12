@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import axios from "../utils/axiosInstance";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../utils/authContext";
+import { ClipLoader } from "react-spinners";
 
 interface LeetCodeQuestion {
   _id: string;
@@ -246,7 +247,7 @@ export default function LeetCodeQuestions() {
 
         <div className="text-center py-4">
           <div className="inline-flex items-center space-x-2 text-gray-400">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-neon-purple"></div>
+            <ClipLoader color="#B026FF" size={20} />
             <span>Loading LeetCode questions...</span>
           </div>
         </div>

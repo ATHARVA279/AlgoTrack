@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../utils/axiosInstance";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../utils/authContext";
+import { ClipLoader } from "react-spinners";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -111,7 +112,7 @@ const Signup = () => {
           >
             {isLoading ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                <ClipLoader color="#ffffff" size={20} />
                 <span>Creating account...</span>
               </div>
             ) : (

@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { ClipLoader } from 'react-spinners';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -9,17 +10,19 @@ export const LoadingSpinner = memo<LoadingSpinnerProps>(({
   size = 'md', 
   text = 'Loading...' 
 }) => {
-  const sizeClasses = {
-    sm: 'h-6 w-6',
-    md: 'h-12 w-12',
-    lg: 'h-16 w-16'
+  const sizeMap = {
+    sm: 30,
+    md: 50,
+    lg: 70
   };
 
   return (
     <div className="flex items-center justify-center text-white">
       <div className="text-center">
-        <div 
-          className={`animate-spin rounded-full border-b-2 border-neon-purple mx-auto mb-4 ${sizeClasses[size]}`}
+        <ClipLoader 
+          color="#B026FF" 
+          size={sizeMap[size]}
+          cssOverride={{ margin: '0 auto', marginBottom: '1rem' }}
         />
         <p className="text-gray-300">{text}</p>
       </div>

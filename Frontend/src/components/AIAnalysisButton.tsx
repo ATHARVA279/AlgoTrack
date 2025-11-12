@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Brain, Zap } from '../utils/icons';
 import axios from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
+import { ClipLoader } from 'react-spinners';
 
 interface AIAnalysisButtonProps {
   question: any;
@@ -68,7 +69,7 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
     >
       {isAnalyzing ? (
         <>
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+          <ClipLoader color="#ffffff" size={20} />
           <span>Analyzing Code...</span>
         </>
       ) : (

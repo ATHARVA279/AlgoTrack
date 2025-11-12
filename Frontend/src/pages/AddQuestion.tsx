@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Editor from "@monaco-editor/react";
 import toast from "react-hot-toast";
+import { ClipLoader } from "react-spinners";
 
 const difficultyLevels = ["Easy", "Medium", "Hard"];
 const topics = [
@@ -333,7 +334,7 @@ function AddQuestion() {
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                  <ClipLoader color="#ffffff" size={20} />
                   <span>Adding...</span>
                 </>
               ) : (

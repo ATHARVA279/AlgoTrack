@@ -3,6 +3,10 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+      },
       colors: {
         primary: {
           DEFAULT: '#8B5CF6',
@@ -58,6 +62,7 @@ export default {
             },
             code: {
               color: '#00F6FF',
+              fontFamily: 'JetBrains Mono, monospace',
             },
           },
         },
