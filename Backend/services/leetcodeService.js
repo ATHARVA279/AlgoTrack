@@ -144,6 +144,12 @@ class LeetCodeService {
             profile {
               ranking
             }
+            submitStatsGlobal {
+              acSubmissionNum {
+                difficulty
+                count
+              }
+            }
           }
         }
       `;
@@ -158,19 +164,13 @@ class LeetCodeService {
       }
 
       // Get the count field which represents actual unique problems solved
-      // The submissions field can include duplicates/retries
-      const easySolved = userProfile.submitStats.acSubmissionNum.find(
-        (s) => s.difficulty === "Easy"
-      )?.count || 0;
+      const acStats = userProfile.submitStatsGlobal.acSubmissionNum;
       
-      const mediumSolved = userProfile.submitStats.acSubmissionNum.find(
-        (s) => s.difficulty === "Medium"
-      )?.count || 0;
+      const easySolved = acStats.find(s => s.difficulty === "Easy")?.count || 0;
+      const mediumSolved = acStats.find(s => s.difficulty === "Medium")?.count || 0;
+      const hardSolved = acStats.find(s => s.difficulty === "Hard")?.count || 0;
       
-      const hardSolved = userProfile.submitStats.acSubmissionNum.find(
-        (s) => s.difficulty === "Hard"
-      )?.count || 0;
-      
+      // Simply add them up - no division or manipulation
       const totalSolved = easySolved + mediumSolved + hardSolved;
       
       console.log(`📊 User profile stats - Easy: ${easySolved}, Medium: ${mediumSolved}, Hard: ${hardSolved}, Total: ${totalSolved}`);
