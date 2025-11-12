@@ -5,12 +5,12 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import { Navbar } from "./components/Navbar";
 import { LoadingSpinner } from "./components/LoadingSpinner";
 import { useAuth } from "./utils/authContext";
 
-// Lazy load pages to reduce initial bundle size
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const QuestionDetail = lazy(() => import("./pages/QuestionDetail"));
@@ -26,7 +26,6 @@ function App() {
   const { isAuthenticated, isLoading } = useAuth();
   const [showApp, setShowApp] = useState(false);
 
-  // Force show app after 5.5 seconds to align with auth timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowApp(true);
@@ -35,7 +34,6 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Show app if not loading or timeout reached
   if (isLoading && !showApp) {
     return (
       <div className="min-h-screen bg-cyber-black flex flex-col items-center justify-center">
@@ -48,6 +46,29 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-cyber-black">
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#1A1A1A',
+              color: '#fff',
+              border: '1px solid rgba(176, 38, 255, 0.3)',
+            },
+            success: {
+              iconTheme: {
+                primary: '#B026FF',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
         <Navbar />
         <main className="container mx-auto px-4 py-8">
           <Suspense fallback={<LoadingSpinner />}>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "../utils/axiosInstance";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useAuth } from "../utils/authContext";
 import { ClipLoader } from "react-spinners";
 
@@ -133,7 +133,6 @@ const Signup = () => {
           </p>
         </div>
       </div>
-      <Toaster position="top-right" />
     </div>
   );
 };
