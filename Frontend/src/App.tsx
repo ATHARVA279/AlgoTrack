@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -24,11 +24,23 @@ const LeetCodeQuestionDetail = lazy(() => import("./pages/LeetCodeQuestionDetail
 
 function App() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [showApp, setShowApp] = useState(false);
 
-  if (isLoading) {
+  // Force show app after 5.5 seconds to align with auth timeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowApp(true);
+    }, 5500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show app if not loading or timeout reached
+  if (isLoading && !showApp) {
     return (
-      <div className="min-h-screen bg-cyber-black">
-        <LoadingSpinner size="lg" />
+      <div className="min-h-screen bg-cyber-black flex flex-col items-center justify-center">
+        <LoadingSpinner size="lg" text="Connecting to server..." />
+        <p className="text-gray-500 text-sm mt-4">This may take a moment if the server is waking up</p>
       </div>
     );
   }

@@ -41,14 +41,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       fetchingRef.current = true;
       setIsLoading(true);
-      const res = await axios.get("/api/auth/me", { withCredentials: true });
+      
+      // Add timeout to prevent blocking the app if backend is slow
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const res = await axios.get("/api/auth/me", { 
+        withCredentials: true,
+        signal: controller.signal 
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (res.data.success) {
         setUser(res.data.user);
         sessionStorage.setItem("streak", res.data.user.streak);
       } else {
         setUser(null);
       }
-    } catch {
+    } catch (error) {
+      // If timeout or network error, assume not logged in
+      console.log("Auth check failed or timed out:", error);
       setUser(null);
     } finally {
       setIsLoading(false);
