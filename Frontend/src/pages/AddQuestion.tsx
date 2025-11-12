@@ -43,7 +43,7 @@ function AddQuestion() {
     }
 
     try {
-      const apiUrl = `http://localhost:5000/api/questions`;
+      const apiUrl = `https://algotrack-vujc.onrender.com/api/questions`;
       const res = await fetch(
         apiUrl,
         {

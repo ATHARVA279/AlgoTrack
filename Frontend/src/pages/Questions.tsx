@@ -15,7 +15,7 @@ export default function Questions() {
     const fetchQuestions = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/questions`,
+          `https://algotrack-vujc.onrender.com/api/questions`,
           {
             credentials: "include",
           }

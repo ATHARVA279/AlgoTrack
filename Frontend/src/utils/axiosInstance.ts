@@ -1,7 +1,7 @@
 import axios from "axios";
 import { requestCache } from "./requestCache";
 
-const baseURL = "http://localhost:5000";
+const baseURL = "https://algotrack-vujc.onrender.com";
 
 const axiosInstance = axios.create({
   baseURL,
