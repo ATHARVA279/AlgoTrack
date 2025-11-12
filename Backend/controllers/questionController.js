@@ -88,7 +88,6 @@ exports.getMonthlyProgress = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
-    console.log("Decoded User ID:", userId);
 
     const user = await User.findById(userId).populate("solvedQuestions");
     if (!user) {

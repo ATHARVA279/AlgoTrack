@@ -61,32 +61,21 @@ export default function LeetCodeQuestions() {
 
   const fetchLeetCodeQuestions = useCallback(async () => {
     try {
-      console.log("🔄 Fetching user's solved LeetCode questions...");
       setLoading(true);
       const response = await axios.get("/api/leetcode/questions");
-      console.log("✅ LeetCode questions response:", response.data);
 
       if (response.data.questions !== undefined) {
-        console.log(
-          "📊 Number of questions received:",
-          response.data.questions.length
-        );
         setQuestions(response.data.questions);
         setLeetcodeProfile(response.data.profile);
 
-        // Show message if no questions are synced yet
         if (response.data.questions.length === 0 && response.data.message) {
           toast(response.data.message);
         }
       } else {
-        // Fallback for old API format
-        console.log("📊 Number of questions received:", response.data.length);
         setQuestions(response.data);
       }
 
-
     } catch (error) {
-      console.error("❌ Error fetching LeetCode questions:", error);
       toast.error("Failed to fetch LeetCode questions");
     } finally {
       setLoading(false);
@@ -94,12 +83,6 @@ export default function LeetCodeQuestions() {
   }, []);
 
   const filterQuestions = useCallback(() => {
-    console.log("🔍 Filtering questions...");
-    console.log("📝 Total questions:", questions.length);
-    console.log("🔎 Search query:", searchQuery);
-    console.log("📊 Selected difficulty:", selectedDifficulty);
-    console.log("🔄 Sort by:", sortBy);
-
     let filtered = questions;
 
     if (searchQuery) {
@@ -116,28 +99,22 @@ export default function LeetCodeQuestions() {
       filtered = filtered.filter((q) => q.difficulty === selectedDifficulty);
     }
 
-    // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       if (sortBy === "latest") {
-        // Sort by latest solved date (newest first)
         const dateA = a.lastSolvedAt ? new Date(a.lastSolvedAt).getTime() : 0;
         const dateB = b.lastSolvedAt ? new Date(b.lastSolvedAt).getTime() : 0;
         return dateB - dateA;
       } else {
-        // Sort by question number
         const numA = parseInt(a.frontendQuestionId) || 0;
         const numB = parseInt(b.frontendQuestionId) || 0;
         return numA - numB;
       }
     });
 
-    console.log("📋 Filtered questions count:", sorted.length);
     setFilteredQuestions(sorted);
   }, [searchQuery, selectedDifficulty, sortBy, questions]);
 
   useEffect(() => {
-    console.log("👤 Frontend: Current user:", user);
-    console.log("🔗 Frontend: User LeetCode username:", user?.leetcodeUsername);
     fetchLeetCodeQuestions();
     if (user?.leetcodeUsername) {
       setLeetcodeUsername(user.leetcodeUsername);
@@ -158,15 +135,11 @@ export default function LeetCodeQuestions() {
 
     try {
       setSyncing(true);
-      const syncType = syncAll ? "comprehensive" : "quick";
       const endpoint = syncAll
         ? "/api/leetcode/sync-all"
         : "/api/leetcode/sync";
 
-      console.log(`🔄 Starting ${syncType} LeetCode sync for:`, usernameToSync);
-
-      // Increase timeout for comprehensive sync
-      const timeout = syncAll ? 300000 : 60000; // 5 minutes for full sync, 1 minute for quick
+      const timeout = syncAll ? 300000 : 60000;
 
       const response = await axios.post(
         endpoint,
@@ -179,12 +152,10 @@ export default function LeetCodeQuestions() {
         }
       );
 
-      console.log("✅ Sync completed:", response.data);
       toast.success(response.data.message);
       setShowSyncModal(false);
       await fetchLeetCodeQuestions();
     } catch (error: unknown) {
-      console.error("❌ Error syncing LeetCode data:", error);
 
       let errorMessage = "Failed to sync LeetCode data";
       if (error && typeof error === "object" && "code" in error) {

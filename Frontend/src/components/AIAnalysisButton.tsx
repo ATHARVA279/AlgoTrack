@@ -28,16 +28,11 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
     const loadingToast = toast.loading('Analyzing your code with AI...');
     
     try {
-      console.log('🔄 Sending AI analysis request...');
-      console.log('📝 Question:', question.title || question._id);
-      
       const response = await axios.post('/api/ai/analyze', {
         question
       }, {
-        timeout: 60000 // 60 second timeout
+        timeout: 60000
       });
-
-      console.log('✅ AI analysis response:', response.data);
 
       if (response.data.success) {
         const { analysis, fromCache } = response.data;
@@ -45,9 +40,9 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
         toast.dismiss(loadingToast);
         
         if (fromCache) {
-          toast.success('Analysis loaded from cache! 🎯');
+          toast.success('Analysis loaded from cache!');
         } else {
-          toast.success('AI analysis completed! 🚀');
+          toast.success('AI analysis completed!');
         }
         
         onAnalysisComplete(analysis);
@@ -56,15 +51,14 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
         toast.error(response.data.message || 'Failed to analyze code');
       }
     } catch (error: any) {
-      console.error('❌ AI Analysis Error:', error);
       toast.dismiss(loadingToast);
       
       let errorMessage = 'Failed to analyze code';
       
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        errorMessage = 'Request timed out. The AI is taking longer than expected. Please try again.';
+        errorMessage = 'Request timed out. Please try again.';
       } else if (error.response?.status === 400) {
-        errorMessage = error.response?.data?.message || 'Invalid request. Please check your code.';
+        errorMessage = error.response?.data?.message || 'Invalid request.';
       } else if (error.response?.status === 401) {
         errorMessage = 'Authentication required. Please log in again.';
       } else if (error.response?.status === 500) {
@@ -76,13 +70,6 @@ export const AIAnalysisButton: React.FC<AIAnalysisButtonProps> = ({
       }
       
       toast.error(errorMessage);
-      
-      // Log additional details for debugging
-      console.log('Error details:', {
-        status: error.response?.status,
-        message: error.response?.data?.message,
-        error: error.response?.data?.error
-      });
     } finally {
       setIsAnalyzing(false);
     }

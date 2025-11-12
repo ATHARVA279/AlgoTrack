@@ -60,8 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(null);
       }
     } catch (error) {
-      // If timeout or network error, assume not logged in
-      console.log("Auth check failed or timed out:", error);
       setUser(null);
     } finally {
       setIsLoading(false);

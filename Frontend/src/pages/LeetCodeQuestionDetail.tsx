@@ -126,9 +126,7 @@ public:
 
     try {
       setSaving(true);
-      console.log("💾 Saving solution for question:", question.title);
 
-      // First, save to LeetCode questions collection
       const leetcodeResponse = await axios.put(`/api/leetcode/questions/${question._id}/solution`, {
         code: code.trim(),
         language: selectedLanguage,
@@ -136,11 +134,7 @@ public:
         isSolved
       });
 
-      console.log("✅ LeetCode solution saved:", leetcodeResponse.data);
-
       if (isSolved && code.trim()) {
-        console.log("🔄 Adding to general questions collection...");
-        
         let sampleInput = "Input will be provided";
         let sampleOutput = "Expected output";
         
@@ -211,17 +205,13 @@ public:
             credentials: "include",
             body: JSON.stringify(questionData),
           });
-          const resData = await res.json().catch(() => ({}));
 
           if (!res.ok) {
-            console.warn("⚠️ Failed to add to general questions collection:", resData);
             toast.success("Solution saved to LeetCode collection! (Failed to add to general collection)");
           } else {
-            console.log("✅ Added to general questions collection");
             toast.success("Solution saved and added to your Questions collection!");
           }
         } catch (generalError) {
-          console.warn("⚠️ Error adding to general questions collection:", generalError);
           toast.success("Solution saved to LeetCode collection! (Failed to add to general collection)");
         }
       } else {

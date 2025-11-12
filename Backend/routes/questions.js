@@ -1,5 +1,3 @@
-console.log("✅ questions.js router loaded"); // Top of file
-
 import express from 'express';
 import Question from '../models/Question';
 

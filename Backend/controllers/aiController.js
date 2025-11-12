@@ -3,13 +3,10 @@ const geminiService = require('../services/geminiService');
 
 const analyzeCode = async (req, res) => {
   try {
-    console.log('🔄 AI Analysis request received');
-    
     const { question } = req.body;
     const userId = req.user.id;
 
     if (!question || !question._id || !question.solution || !question.solution.code || !question.solution.language) {
-      console.log('❌ Invalid request - missing required fields');
       return res.status(400).json({
         success: false,
         message: 'Question object with ID, solution code, and language is required'
@@ -23,12 +20,7 @@ const analyzeCode = async (req, res) => {
     const questionDescription = question.description || '';
     const sampleInput = question.sampleInput || '';
     const sampleOutput = question.sampleOutput || '';
-    
-    console.log('📝 Analyzing code for question:', questionTitle);
-    console.log('💻 Language:', language);
-    console.log('👤 User ID:', userId);
 
-    // Check for existing analysis
     let existingAnalysis = await AIAnalysis.findOne({
       questionId,
       userId,
@@ -36,7 +28,6 @@ const analyzeCode = async (req, res) => {
     });
 
     if (existingAnalysis) {
-      console.log('✅ Found existing analysis in cache');
       return res.status(200).json({
         success: true,
         message: 'Analysis retrieved from cache',
@@ -45,7 +36,6 @@ const analyzeCode = async (req, res) => {
       });
     }
     
-    console.log('🔄 Calling Gemini AI service...');
     const aiResults = await geminiService.analyzeCode(
       code, 
       language, 
@@ -55,7 +45,6 @@ const analyzeCode = async (req, res) => {
       sampleOutput
     );
 
-    console.log('✅ AI analysis completed, saving to database...');
     const analysis = new AIAnalysis({
       questionId,
       userId,
@@ -65,7 +54,6 @@ const analyzeCode = async (req, res) => {
     });
     
     await analysis.save();
-    console.log('✅ Analysis saved successfully');
 
     res.status(200).json({
       success: true,
@@ -75,10 +63,8 @@ const analyzeCode = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ AI Analysis Error:', error.message);
-    console.error('❌ Error stack:', error.stack);
+    console.error('AI Analysis Error:', error.message);
     
-    // Provide more specific error messages
     let userMessage = 'Failed to analyze code';
     
     if (error.message?.includes('API key')) {
@@ -94,8 +80,7 @@ const analyzeCode = async (req, res) => {
     res.status(500).json({
       success: false,
       message: userMessage,
-      error: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      error: error.message
     });
   }
 };

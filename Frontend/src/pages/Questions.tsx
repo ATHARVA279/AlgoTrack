@@ -44,8 +44,6 @@ export default function Questions() {
     fetchQuestions();
   }, []);
 
-  console.log("Questions fetched:", questions);
-
   useEffect(() => {
     if (!Array.isArray(questions) || questions.length === 0) {
       setFilteredQuestions([]);

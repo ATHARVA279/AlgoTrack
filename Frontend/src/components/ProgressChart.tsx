@@ -52,7 +52,6 @@ const ProgressChart = () => {
         }
 
         const data = await res.json();
-        console.log("Fetched progress data from backend:", data);
 
         const days = getLastNDays(view === "7D" ? 7 : 30);
         const counts = {};
@@ -67,8 +66,6 @@ const ProgressChart = () => {
           questions: counts[d.day] || 0,
         }));
 
-        console.log("Computed chartData:", chartData);
-
         const totalSolved = chartData.reduce((a, b) => a + b.questions, 0);
         const best = chartData.reduce((max, d) =>
           d.questions > max.questions ? d : max
@@ -82,7 +79,6 @@ const ProgressChart = () => {
       }
     };
 
-    console.log("Fetching progress for view:", view);
     fetchProgress();
   }, [view]);
 
