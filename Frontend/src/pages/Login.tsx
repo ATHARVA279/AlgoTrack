@@ -10,9 +10,11 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
       const res = await axios.post(
@@ -32,13 +34,15 @@ const Login = () => {
       } else {
         toast.error("Login failed!");
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Login error:", err);
       const errorMessage =
         err.response?.data?.msg ||
         err.message ||
         "An unexpected error occurred!";
-      toast.error(`Login failed: ${errorMessage}`);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -73,9 +77,17 @@ const Login = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-neon-purple text-white font-semibold py-2 rounded-md hover:bg-purple-700 transition"
+            disabled={isLoading}
+            className="w-full bg-neon-purple text-white font-semibold py-2 rounded-md hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Login
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                <span>Logging in...</span>
+              </div>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
         

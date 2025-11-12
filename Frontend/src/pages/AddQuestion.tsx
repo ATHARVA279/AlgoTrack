@@ -20,6 +20,7 @@ const topics = [
 
 function AddQuestion() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -41,6 +42,8 @@ function AddQuestion() {
       toast.error("Please fill in all required fields");
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const apiUrl = `https://algotrack-vujc.onrender.com/api/questions`;
@@ -65,6 +68,8 @@ function AddQuestion() {
     } catch (err) {
       console.error(err);
       toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -323,10 +328,20 @@ function AddQuestion() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="cyber-button flex items-center space-x-2"
+              disabled={isLoading}
+              className="cyber-button flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Plus className="w-5 h-5" />
-              <span>Add Question</span>
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                  <span>Adding...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-5 h-5" />
+                  <span>Add Question</span>
+                </>
+              )}
             </button>
           </div>
         </form>
